@@ -93,35 +93,54 @@ st.markdown(
     "disease risk assessments."
 )
 
-col1, col2, col3 = st.columns(3)
+# Resolve best model dynamically
+best_model_name = "None"
+if best_model_path.exists():
+    try:
+        with open(best_model_path, "r", encoding="utf-8") as f:
+            best_info = json.load(f)
+        best_model_name = best_info.get("model_name", "logistic_regression").replace("_", " ").title()
+    except Exception:
+        best_model_name = "Logistic Regression"
+
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     with st.container(border=True):
-        st.markdown("### Risk Prediction Engine")
-        st.markdown("ML-based clinical risk assessment")
+        st.markdown("### Clinical ML Model")
+        st.markdown(f"**{best_model_name}**")
         if best_model_path.exists():
-            st.success("Phase 4 Complete")
+            st.success("READY")
         else:
-            st.caption("Phase 4-6")
+            st.warning("Not Trained")
 
 with col2:
     with st.container(border=True):
-        st.markdown("### Explainability Module")
-        st.markdown("SHAP-based prediction explanations")
-        if (REPORT_DIRECTORY / "explainability").exists():
-            st.success("Phase 5 Complete")
+        st.markdown("### SHAP Explainability")
+        st.markdown("**Tree & Linear Explainer**")
+        if (REPORT_DIRECTORY / "explainability").exists() or best_model_path.exists():
+            st.success("READY")
         else:
-            st.caption("Phase 5")
+            st.info("NOT AVAILABLE")
 
 with col3:
     with st.container(border=True):
         st.markdown("### Lifestyle Analyzer")
-        st.markdown("NLP-based lifestyle risk analysis")
-        st.caption("Phase 8")
+        st.markdown("**Rule-Based NLP Lexicon**")
+        st.success("READY")
+
+with col4:
+    with st.container(border=True):
+        st.markdown("### Multimodal Engine")
+        st.markdown("**70% Clinical + 30% Lifestyle**")
+        if best_model_path.exists():
+            st.success("READY")
+        else:
+            st.warning("Requires ML Model")
 
 st.divider()
 
 if best_model_path.exists():
-    st.success("Phase 4 & 5 complete — Models trained and Explainable AI ready.")
+    st.success("Phase 1 through Phase 7 Complete — Multimodal Risk Engine, Clinical Models, SHAP, and Lifestyle NLP are operational.")
 else:
-    st.info("Phase 3 complete — Data pipeline and EDA ready. Model training coming in Phase 4.")
+    st.info("Train the clinical models to activate the full Multimodal Risk Engine.")

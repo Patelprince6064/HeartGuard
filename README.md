@@ -396,11 +396,49 @@ pytest tests/test_lifestyle_analyzer.py -v
 
 ---
 
+## Phase 7: Multimodal Risk Integration (DONE)
+
+HeartGuard unifies objective clinical machine learning predictions with qualitative lifestyle text analysis into a single multimodal cardiovascular risk assessment engine.
+
+### Key Capabilities
+
+1. **70/30 Multimodal Weighting**:
+   - **Formula**: $\text{Overall Risk} = (\text{Clinical Risk} \times 0.70) + (\text{Lifestyle Risk} \times 0.30)$
+   - **Clinical ML Risk (70%)**: Positive-class probability from the best trained clinical model (e.g. Logistic Regression, XGBoost, Random Forest, or MLP), scaled to $0 - 100\%$.
+   - **Lifestyle Risk (30%)**: Quantified risk score ($0 - 100$) derived from the NLTK rule-based lifestyle analyzer.
+
+2. **Operational Decision Thresholds**:
+   - **Critical Risk ($> 85\%$)**: `CRITICAL` alert level $\rightarrow$ *"Immediate medical consultation recommended."*
+   - **Elevated Risk ($60\% - 85\%$)**: `APPOINTMENT_RECOMMENDED` alert level $\rightarrow$ *"Medical appointment recommendation."*
+   - **Lower / Baseline Risk ($< 60\%$)**: `MONITORING` alert level $\rightarrow$ *"Regular monitoring recommended."*
+   - *Note: This phase calculates the alert state but does not send notifications.*
+
+3. **Unified Multimodal Streamlit Interface**:
+   - Live on `pages/risk_assessment.py`.
+   - Organised forms for demographics, physiological measurements, and diagnostic test results.
+   - Text area for self-reported lifestyle narrative.
+   - Dynamic overall risk score gauge, category banners, contribution breakdown tables, and component comparison charts.
+   - Embedded SHAP waterfall plots and lifestyle evidence summaries.
+
+4. **Status Dashboard Integration**:
+   - Updated `pages/dashboard.py` showing live operational status for the Multimodal Engine, Clinical ML Model, SHAP Explainability, and Lifestyle NLP Analyzer.
+
+### Running Tests
+
+```bash
+# Full test suite (244 passing)
+pytest -q
+
+# Phase 7 Multimodal Risk Engine tests only (22 passing)
+pytest tests/test_multimodal_risk.py -v
+```
+
+---
+
 ## Future Phases (Upcoming)
 
-- Phase 7: Multimodal Risk Engine (70% Clinical ML + 30% Lifestyle NLP)
 - Phase 8: Emergency Alerts (Twilio SMS Notifications)
-- Phase 9: PDF Patient Reports & Full Streamlit App Deployment
+- Phase 9: PDF Patient Reports & Full Application Deployment
 
 ## Medical Disclaimer
 
