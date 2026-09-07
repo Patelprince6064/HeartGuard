@@ -9,6 +9,9 @@ from config.settings import (
     RAW_DATA_DIRECTORY,
     REPORT_DIRECTORY,
 )
+import pandas as pd
+from src.analytics.analytics_service import AnalyticsService
+from src.analytics.trend_service import TrendService
 from src.auth.authorization import require_authentication
 from src.auth.session_manager import clear_session, get_current_user
 from src.security.audit_logger import log_event
@@ -36,6 +39,33 @@ st.markdown(
     "qualified healthcare professional."
 )
 
+st.divider()
+
+# --- Patient Assessment Overview (Phase 10) ---
+st.markdown("### 🩺 My Assessment Summary")
+user_stats = AnalyticsService.calculate_user_statistics(user_id=current_user["id"])
+
+d_col1, d_col2, d_col3, d_col4 = st.columns(4)
+with d_col1:
+    st.metric("Total Assessments", user_stats["total_assessments"])
+with d_col2:
+    latest_risk_disp = f"{user_stats['latest_risk']:.1f}%" if user_stats["latest_risk"] is not None else "N/A"
+    st.metric("Latest Risk Score", latest_risk_disp)
+with d_col3:
+    st.metric("Risk Category", user_stats["latest_category"] or "N/A")
+with d_col4:
+    st.metric("Latest Alert Status", user_stats["latest_alert_status"] or "N/A")
+
+user_trends = TrendService.get_risk_trends(user_id=current_user["id"])
+if len(user_trends) >= 2:
+    st.markdown("#### Overall Risk Trend")
+    trend_df = pd.DataFrame(user_trends)
+    trend_df["date"] = pd.to_datetime(trend_df["date"])
+    c_df = trend_df.set_index("date")[["overall_risk"]]
+    c_df.columns = ["Overall Risk (%)"]
+    st.line_chart(c_df, color="#1e3a8a")
+
+st.page_link("pages/history.py", label="📜 View Full Assessment History & Reports →")
 st.divider()
 
 # --- Data Pipeline Status ---

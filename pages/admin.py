@@ -161,6 +161,44 @@ except Exception:
 
 st.divider()
 
+# ── System Assessment Analytics (Phase 10) ──────────────────────────────────
+st.markdown("### 📊 System Assessment Analytics")
+st.caption("Aggregated platform metrics. Individual patient medical data and lifestyle narratives are never exposed.")
+
+try:
+    from src.analytics.analytics_service import AnalyticsService
+    import pandas as pd
+    sys_stats = AnalyticsService.get_admin_aggregated_analytics()
+
+    sa1, sa2, sa3 = st.columns(3)
+    with sa1:
+        st.metric("Total Assessments Conducted", sys_stats["total_assessments"])
+    with sa2:
+        st.metric("Assessed Patients", sys_stats["active_patients"])
+    with sa3:
+        st.metric("System Mean Risk Score", f"{sys_stats['average_system_risk']:.1f}%")
+
+    if sys_stats["total_assessments"] > 0:
+        c_col1, c_col2 = st.columns(2)
+        with c_col1:
+            st.markdown("#### Risk Category Distribution")
+            st.dataframe(
+                pd.DataFrame(list(sys_stats["category_distribution"].items()), columns=["Category", "Count"]),
+                use_container_width=True,
+                hide_index=True,
+            )
+        with c_col2:
+            st.markdown("#### Model Version Usage")
+            st.dataframe(
+                pd.DataFrame(list(sys_stats["model_version_distribution"].items()), columns=["Model Version", "Usage Count"]),
+                use_container_width=True,
+                hide_index=True,
+            )
+except Exception:
+    st.warning("Unable to load assessment analytics.")
+
+st.divider()
+
 # ── User List ─────────────────────────────────────────────────────────────────
 with st.expander("👥 User Accounts (Admin View)"):
     st.caption(

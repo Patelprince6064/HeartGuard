@@ -496,6 +496,46 @@ pytest tests/test_auth.py tests/test_authorization.py tests/test_security.py tes
 
 ---
 
+## Phase 10: Patient History, Analytics, Trends & Report Generation (DONE)
+
+HeartGuard provides an assessment history, longitudinal trend tracking, and PDF report generation system.
+
+### Key Capabilities
+
+1. **Assessment History & Privacy Isolation**:
+   - Historical evaluations stored in SQLite (`data/assessments/assessments.db`).
+   - Server-level patient data isolation: queries strictly filter by authenticated `user_id`.
+   - Ownership verification prevents cross-account data exposure.
+
+2. **Longitudinal Risk Trends & Comparative Analytics**:
+   - Chronological risk trajectory charts (Overall, Clinical ML 70%, Lifestyle NLP 30%).
+   - Pairwise assessment comparison with explicit percentage-point changes (e.g. `+8.0 percentage points`).
+   - Prudent, non-diagnostic model trend descriptions.
+
+3. **Professional PDF Report Generation**:
+   - Multi-page academic/research prototype PDF generated via **ReportLab**.
+   - Contains executive risk summary, weighted multimodal breakdown, SHAP explainability drivers, trend charts, alert audit details, and medical disclaimers.
+   - Secure filename sanitization prevents path traversal.
+
+4. **Formula-Safe CSV Data Export**:
+   - Patients can download their assessment history as CSV.
+   - Sanitization neutralizes spreadsheet formula injection (`=`, `+`, `-`, `@`).
+
+5. **Admin Aggregated Analytics**:
+   - System-wide assessment counts, risk category distributions, model version usage, and alert statistics without exposing patient PII.
+
+### Running Phase 10 Tests
+
+```bash
+# Run full test suite (316 passing)
+pytest -q
+
+# Run Phase 10 tests
+pytest tests/test_assessment_history.py tests/test_report_generator.py -v
+```
+
+---
+
 ## Medical Disclaimer
 
 HeartGuard is an academic/research prototype and is not a medical diagnostic system.

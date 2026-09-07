@@ -36,6 +36,7 @@ data/processed/*
 data/alerts/*
 data/auth/*
 data/security/*
+data/assessments/*
 reports/generated/*
 
 # Keep directory structure
@@ -44,6 +45,7 @@ reports/generated/*
 !data/alerts/.gitkeep
 !data/auth/.gitkeep
 !data/security/.gitkeep
+!data/assessments/.gitkeep
 !reports/generated/.gitkeep
 
 # pytest

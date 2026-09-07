@@ -45,16 +45,18 @@ PROCESSED_DATA_DIRECTORY = DATA_DIRECTORY / "processed"
 ALERT_DIRECTORY = DATA_DIRECTORY / "alerts"
 AUTH_DATA_DIRECTORY = DATA_DIRECTORY / "auth"
 SECURITY_DATA_DIRECTORY = DATA_DIRECTORY / "security"
+ASSESSMENT_DATA_DIRECTORY = DATA_DIRECTORY / "assessments"
 REPORT_DIRECTORY = BASE_DIR / "reports"
 NOTEBOOK_DIRECTORY = BASE_DIR / "notebooks"
 ASSETS_DIRECTORY = BASE_DIR / "assets"
 
 # ---------------------------------------------------------------------------
-# Database paths (Phase 9)
+# Database paths (Phase 9 + Phase 10)
 # ---------------------------------------------------------------------------
 AUTH_DB_PATH = AUTH_DATA_DIRECTORY / "heartguard_auth.db"
 AUDIT_DB_PATH = SECURITY_DATA_DIRECTORY / "audit.db"
 ALERTS_DB_PATH = ALERT_DIRECTORY / "alerts.db"
+ASSESSMENTS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "assessments.db"
 
 # ---------------------------------------------------------------------------
 # Ensure directories exist
@@ -64,6 +66,7 @@ PROCESSED_DATA_DIRECTORY.mkdir(exist_ok=True)
 ALERT_DIRECTORY.mkdir(exist_ok=True)
 AUTH_DATA_DIRECTORY.mkdir(exist_ok=True)
 SECURITY_DATA_DIRECTORY.mkdir(exist_ok=True)
+ASSESSMENT_DATA_DIRECTORY.mkdir(exist_ok=True)
 REPORT_DIRECTORY.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------

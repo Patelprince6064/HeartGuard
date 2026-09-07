@@ -79,7 +79,7 @@ st.divider()
 # ---------------------------------------------------------------------------
 # Navigation cards
 # ---------------------------------------------------------------------------
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     with st.container(border=True):
@@ -94,13 +94,19 @@ with col1:
 
 with col2:
     with st.container(border=True):
+        st.markdown("### 📜 Assessment History")
+        st.markdown("Personal risk trajectories, trend analysis & PDF report generation")
+        st.page_link("pages/history.py", label="Open History & Reports →")
+
+    with st.container(border=True):
         st.markdown("### 🏃 Lifestyle Analyzer")
         st.markdown("NLP-based lifestyle cardiovascular risk scoring")
         st.page_link("pages/lifestyle_analyzer.py", label="Open Lifestyle Analyzer →")
 
+with col3:
     with st.container(border=True):
         st.markdown("### 📊 Dashboard")
-        st.markdown("System status, data pipeline, and model information")
+        st.markdown("System status, personal summaries, and pipeline health")
         st.page_link("pages/dashboard.py", label="Open Dashboard →")
 
 if is_admin():
@@ -115,4 +121,4 @@ if is_admin():
         st.page_link("pages/security.py", label="🔐 Security Status →")
 
 st.divider()
-st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 9 — Security Hardened")
+st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 10 — History, Analytics & Reports Active")

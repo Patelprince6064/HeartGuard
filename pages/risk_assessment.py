@@ -23,6 +23,8 @@ from src.risk_engine.risk_categories import (
     CLINICAL_WEIGHT,
     LIFESTYLE_WEIGHT,
 )
+from src.alerts.alert_manager import AlertManager
+from src.analytics.history_service import HistoryService
 from src.risk_engine.risk_explanation import DISCLAIMER_TEXT
 from src.security.audit_logger import log_event
 from src.security.input_validator import validate_lifestyle_text_length
@@ -235,9 +237,29 @@ if assess_clicked:
                     lifestyle_text=lifestyle_text,
                     include_shap=True,
                 )
+
+                # Process emergency alert status (Phase 8)
+                alert_manager = AlertManager()
+                alert_res = alert_manager.process_risk_result(
+                    risk_result=assessment,
+                    patient_context=clinical_data,
+                )
+                alert_status = alert_res.get("notification_status", "NOT_TRIGGERED")
+                assessment_id = alert_res.get("assessment_id")
+
+                # Persist assessment record in history database (Phase 10)
+                saved_record = HistoryService.save_assessment(
+                    user_id=current_user["id"],
+                    multimodal_result=assessment,
+                    alert_status=alert_status,
+                    assessment_id=assessment_id,
+                )
+
                 # Store in session state tagged with user_id for isolation
                 st.session_state["assessment_result"] = assessment
                 st.session_state["assessment_user_id"] = current_user["id"]
+                st.session_state["assessment_saved_record"] = saved_record
+                st.session_state["alert_result"] = alert_res
 
             except Exception as exc:
                 # NEVER display raw traceback to the user
@@ -264,7 +286,15 @@ if "assessment_result" in st.session_state:
     action = comb["recommended_action"]
 
     st.divider()
-    st.markdown("## Multimodal Assessment Results")
+    res_hdr_col, link_col = st.columns([3, 1])
+    with res_hdr_col:
+        st.markdown("## Multimodal Assessment Results")
+        if "assessment_saved_record" in st.session_state:
+            s_rec = st.session_state["assessment_saved_record"]
+            st.caption(f"Assessment ID: `{s_rec.assessment_id}` · Saved to History · Alert Status: `{s_rec.alert_status}`")
+    with link_col:
+        st.markdown("<br/>", unsafe_allow_html=True)
+        st.page_link("pages/history.py", label="📜 View History & Reports →")
 
     # Overall Summary Banner
     if category == CATEGORY_CRITICAL:
