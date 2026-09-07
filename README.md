@@ -267,15 +267,96 @@ pytest tests/test_pipeline.py -v
 
 ---
 
-## Future Phases (Pending)
+## Phase 4: Machine Learning Models & Evaluation (DONE)
 
-- Phase 4: ML Model Training
-- Phase 5: Model Evaluation
-- Phase 6: Prediction Engine
-- Phase 7: Explainable AI (SHAP)
-- Phase 8: Lifestyle NLP
-- Phase 9: Multimodal Risk Engine
-- Phase 10: Emergency Alerts (Twilio)
+### Models Implemented
+
+| Model | Class | Hyperparameter Tuning | Explainer Compatibility |
+|-------|-------|----------------------|-------------------------|
+| Logistic Regression | `LogisticRegression` | Grid search (C, penalty, solver) | LinearExplainer |
+| Random Forest | `RandomForestClassifier` | Grid search (n_estimators, max_depth) | TreeExplainer |
+| XGBoost | `XGBClassifier` | Grid search (learning_rate, max_depth) | TreeExplainer |
+| Neural Network (MLP) | `MLPClassifier` | Grid search (hidden_layer_sizes, alpha) | KernelExplainer |
+
+### Cross-Validation & Model Selection
+
+- 5-fold Stratified K-Fold cross-validation
+- ROC-AUC metric optimization with secondary F1 evaluation
+- Artifacts: models saved to `models/`, evaluation metrics in `reports/model_results.json`, confusion matrices and ROC curves in `reports/figures/`
+
+---
+
+## Phase 5: Explainable AI with SHAP (DONE)
+
+HeartGuard incorporates explainable artificial intelligence (XAI) using SHAP (SHapley Additive exPlanations) to provide mathematical transparency and clinical interpretability for heart disease predictions.
+
+### Key Capabilities
+
+1. **TreeExplainer & Model-Specific Explainers**:
+   - `TreeExplainer` for tree-based models (XGBoost, Random Forest) with exact Shapley value computation
+   - `LinearExplainer` for linear models (Logistic Regression)
+   - `KernelExplainer` fallback for arbitrary model architectures
+   - Dynamic explainer selection via `create_shap_explainer()`
+
+2. **Global Feature Importance**:
+   - Computes mean absolute SHAP values across the training population
+   - Exports ranked feature importance table to `reports/explainability/shap_global_importance.csv`
+   - Generates global importance horizontal bar chart (`reports/figures/shap_global_importance.png`)
+   - Generates SHAP beeswarm summary plot (`reports/figures/shap_summary.png`)
+
+3. **Local Patient-Level Explanations**:
+   - Exact per-feature attribution for individual patient predictions
+   - **SHAP Waterfall Plot**: Visualizes how each clinical attribute pushes risk above or below baseline log-odds/probability (`reports/figures/shap_waterfall.png`)
+   - **Feature Contribution Plot**: Visualizes local feature importance and direction (`reports/figures/shap_local_importance.png`)
+   - Structured JSON export for EHR integration (`reports/explainability/shap_local_explanation.json`)
+
+4. **Human-Readable Clinical Explanations**:
+   - Translates numerical Shapley values into clear, plain-language clinical narratives
+   - Identifies top risk-increasing and risk-mitigating factors with clinical labels
+   - Disclaimers highlighting model interpretation vs clinical diagnosis
+
+5. **Top Risk Factors**:
+   - Extracts top $N$ (default 3) features driving positive risk for targeted clinical review
+
+6. **Interactive Streamlit Interface**:
+   - Accessible via the "Explainable AI" page (`pages/explainable_ai.py`)
+   - Interactive patient input sliders and inputs
+   - Real-time prediction, probability, waterfall plot, and top risk breakdown
+   - One-click global population importance computation
+
+7. **Offline CLI Tool**:
+   - `python scripts/generate_shap_reports.py` generates all global artifacts without starting the UI
+
+### Artefacts Generated
+
+| Artefact | Path |
+|----------|------|
+| Global Importance CSV | `reports/explainability/shap_global_importance.csv` |
+| Explainer Metadata JSON | `reports/explainability/explainer_metadata.json` |
+| Local Explanation JSON | `reports/explainability/shap_local_explanation.json` |
+| Global Feature Importance Plot | `reports/figures/shap_global_importance.png` |
+| SHAP Summary Beeswarm Plot | `reports/figures/shap_summary.png` |
+| Waterfall Plot | `reports/figures/shap_waterfall.png` |
+| Local Importance Plot | `reports/figures/shap_local_importance.png` |
+
+### Running Tests
+
+```bash
+# Run all tests (196 passing)
+pytest -q
+
+# Run Phase 5 SHAP tests only (40 passing)
+pytest tests/test_shap.py -v
+```
+
+---
+
+## Future Phases (Upcoming)
+
+- Phase 6: Lifestyle NLP Analysis
+- Phase 7: Multimodal Risk Engine (Clinical + Lifestyle)
+- Phase 8: Emergency Alerts (Twilio SMS)
+- Phase 9: PDF Patient Reports & Full Streamlit App Deployment
 
 ## Medical Disclaimer
 

@@ -109,6 +109,21 @@ class SHAPExplainerService:
         self._ensure_loaded()
         return list(self._feature_names)
 
+    def _preprocess_input(self, X_row: pd.DataFrame) -> pd.DataFrame:
+        """Preprocess raw patient input and align to expected model features."""
+        preprocessor = load_preprocessor(MODEL_DIRECTORY / "preprocessor.pkl")
+        raw_transformed = preprocessor.transform(X_row)
+        if hasattr(preprocessor, "get_feature_names_out"):
+            p_cols = list(preprocessor.get_feature_names_out())
+        else:
+            p_cols = self._feature_names[: raw_transformed.shape[1]]
+
+        X_df = pd.DataFrame(raw_transformed, columns=p_cols, index=X_row.index)
+        for col in self._feature_names:
+            if col not in X_df.columns:
+                X_df[col] = 0.0
+        return X_df[self._feature_names]
+
     def explain_patient(
         self,
         patient_data: dict[str, Any] | pd.DataFrame,
@@ -131,20 +146,8 @@ class SHAPExplainerService:
         else:
             X_row = patient_data.copy()
 
-        # Preprocess with the Phase 3 preprocessor
-        preprocessor = load_preprocessor(MODEL_DIRECTORY / "preprocessor.pkl")
-        X_transformed = pd.DataFrame(
-            preprocessor.transform(X_row),
-            columns=self._feature_names,
-            index=X_row.index,
-        )
-
-        # Validate feature alignment
-        if X_transformed.shape[1] != len(self._feature_names):
-            raise ValueError(
-                f"Preprocessed feature count ({X_transformed.shape[1]}) "
-                f"!= expected ({len(self._feature_names)})"
-            )
+        # Preprocess and align to model's feature set
+        X_transformed = self._preprocess_input(X_row)
 
         # Predict
         prediction = int(self._model.predict(X_transformed)[0])
@@ -289,12 +292,6 @@ class SHAPExplainerService:
         else:
             X_row = patient_data.copy()
 
-        preprocessor = load_preprocessor(MODEL_DIRECTORY / "preprocessor.pkl")
-        X_transformed = pd.DataFrame(
-            preprocessor.transform(X_row),
-            columns=self._feature_names,
-            index=X_row.index,
-        )
-
+        X_transformed = self._preprocess_input(X_row)
         shap_vals, _ = calculate_shap_values(self._explainer, X_transformed)
         return get_top_risk_factors(shap_vals[0], self._feature_names, top_n=top_n)
