@@ -182,6 +182,44 @@ def get_alert_status_badge(status: str | None) -> str:
     return f"`⚪ [{normalized}]`"
 
 
+# ── Priority Badges (Phase 13) ───────────────────────────────────────────────
+
+PRIORITY_CONFIG: dict[str, dict[str, str]] = {
+    "HIGH": {
+        "label": "HIGH PRIORITY",
+        "icon": "🔴",
+        "color": "#dc2626",
+    },
+    "MEDIUM": {
+        "label": "MEDIUM PRIORITY",
+        "icon": "🟡",
+        "color": "#d97706",
+    },
+    "LOW": {
+        "label": "LOW PRIORITY",
+        "icon": "🟢",
+        "color": "#16a34a",
+    },
+    "INFO": {
+        "label": "INFORMATIONAL",
+        "icon": "ℹ️",
+        "color": "#2563eb",
+    },
+}
+
+
+def get_priority_badge(priority: str | None) -> str:
+    """Return a formatted markdown badge string for a recommendation priority."""
+    if not priority:
+        return "`ℹ️ [INFO]`"
+    normalized = priority.strip().upper()
+    cfg = PRIORITY_CONFIG.get(normalized)
+    if cfg:
+        return f"`{cfg['icon']} [{cfg['label']}]`"
+    return f"`ℹ️ [{normalized}]`"
+
+
 def render_badge(badge_markdown: str) -> None:
     """Render a badge markdown string inside Streamlit."""
     st.markdown(badge_markdown)
+

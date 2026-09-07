@@ -32,6 +32,7 @@ from reportlab.platypus import (
 from src.analytics.history_service import HistoryService
 from src.analytics.models import Assessment
 from src.analytics.trend_service import TrendService
+from src.recommendations.recommendation_service import RecommendationService
 from src.reports.report_templates import (
     APPOINT_COLOR,
     BG_LIGHT,
@@ -399,7 +400,69 @@ class ReportGenerator:
         story.append(PageBreak())
 
         # ===================================================================
-        # PAGE 4: Alert Information & Medical Disclaimers
+        # PAGE 4: AI Insights & Personalized Recommendations (Phase 13)
+        # ===================================================================
+        story.append(Paragraph("AI Insights & Personalized Recommendations", styles["Heading1"]))
+        story.append(Paragraph("Explainable, action-oriented guidance derived deterministically from your multimodal assessment data.", styles["Body"]))
+        story.append(Spacer(1, 8))
+
+        # Retrieve or compute assessment insights
+        try:
+            insights = RecommendationService.get_or_create_insights(assessment_id, user_id=user_id)
+        except Exception:
+            insights = None
+
+        if insights:
+            # Assessment Summary Box
+            story.append(Paragraph("Personalized Assessment Summary", styles["Heading2"]))
+            story.append(Paragraph(f"<i>{insights.summary_text}</i>", styles["Body"]))
+            story.append(Spacer(1, 6))
+
+            # Top Model Factors
+            if insights.top_factors:
+                story.append(Paragraph("Top Model Contributors (Explainability)", styles["Heading2"]))
+                factor_items = "<br/>".join([f"• <b>{f['feature']}:</b> {f['description']}" for f in insights.top_factors[:4]])
+                story.append(Paragraph(factor_items, styles["Body"]))
+                story.append(Spacer(1, 8))
+
+            # Actionable Recommendations Table
+            if insights.recommendations:
+                story.append(Paragraph("Personalized Recommendations", styles["Heading2"]))
+                rec_rows = [["Priority", "Category", "Recommended Guidance"]]
+                for rec in insights.recommendations[:6]:
+                    guidance_p = Paragraph(f"<b>{rec.title}</b><br/>{rec.description}", styles["Body"])
+                    rec_rows.append([rec.priority, rec.category, guidance_p])
+
+                rec_table = Table(rec_rows, colWidths=[1.1 * inch, 1.8 * inch, 3.6 * inch])
+                rec_table.setStyle(
+                    TableStyle(
+                        [
+                            ("BACKGROUND", (0, 0), (-1, 0), PRIMARY_COLOR),
+                            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+                            ("BACKGROUND", (0, 1), (-1, -1), BG_LIGHT),
+                            ("BOX", (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+                            ("INNERGRID", (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+                            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                            ("TOPPADDING", (0, 0), (-1, -1), 4),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                        ]
+                    )
+                )
+                story.append(rec_table)
+            else:
+                story.append(Paragraph("<i>No personalized recommendations are available for this assessment.</i>", styles["Disclaimer"]))
+        else:
+            story.append(Paragraph("<i>Insights are currently unavailable for this assessment.</i>", styles["Disclaimer"]))
+
+        story.append(Spacer(1, 8))
+        story.append(Paragraph("<b>Notice:</b> These AI-generated insights are informational and are not a medical diagnosis or treatment plan.", styles["Disclaimer"]))
+
+        story.append(PageBreak())
+
+        # ===================================================================
+        # PAGE 5: Alert Information & Medical Disclaimers
         # ===================================================================
         story.append(Paragraph("Alert Information & Disclaimers", styles["Heading1"]))
         story.append(Spacer(1, 8))

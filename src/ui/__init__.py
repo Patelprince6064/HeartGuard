@@ -5,6 +5,7 @@ Exports reusable badges, cards, charts, tables, and dashboard components.
 
 from src.ui.badges import (
     get_alert_status_badge,
+    get_priority_badge,
     get_review_status_badge,
     get_risk_category_badge,
     render_badge,
@@ -13,8 +14,10 @@ from src.ui.cards import (
     format_risk_percentage,
     render_assessment_summary_card,
     render_emergency_disclaimer,
+    render_insight_card,
     render_medical_disclaimer,
     render_metric_card,
+    render_recommendation_card,
     render_risk_components_cards,
     render_trend_disclaimer,
 )
@@ -42,6 +45,7 @@ from src.ui.tables import (
 __all__ = [
     "format_risk_percentage",
     "get_alert_status_badge",
+    "get_priority_badge",
     "get_review_status_badge",
     "get_risk_category_badge",
     "prepare_alert_distribution_chart",
@@ -56,10 +60,12 @@ __all__ = [
     "render_dashboard_header",
     "render_emergency_disclaimer",
     "render_empty_dashboard_state",
+    "render_insight_card",
     "render_lifestyle_insights",
     "render_medical_disclaimer",
     "render_metric_card",
     "render_recent_assessments_table",
+    "render_recommendation_card",
     "render_reviewer_queue_table",
     "render_quick_actions",
     "render_risk_components_cards",

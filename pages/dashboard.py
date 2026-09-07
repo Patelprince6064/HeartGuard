@@ -53,11 +53,13 @@ from src.ui import (
     render_dashboard_header,
     render_emergency_disclaimer,
     render_empty_dashboard_state,
+    render_insight_card,
     render_lifestyle_insights,
     render_medical_disclaimer,
     render_metric_card,
     render_quick_actions,
     render_recent_assessments_table,
+    render_recommendation_card,
     render_risk_components_cards,
     render_trend_disclaimer,
     safe_render_section,
@@ -301,6 +303,46 @@ def _render_lifestyle_section() -> None:
             st.divider()
 
 safe_render_section("Lifestyle Insights", _render_lifestyle_section)
+
+# ── Personalized AI Recommendations & Insights (Phase 13) ─────────────────────
+def _render_recommendations_section() -> None:
+    if not latest_assessment:
+        return
+    st.markdown("### 💡 Personalized AI Recommendations & Insights")
+    st.caption(
+        "Action-oriented guidance derived from your latest multimodal assessment parameters. "
+        "These recommendations are educational and strictly non-diagnostic."
+    )
+
+    try:
+        from src.recommendations.recommendation_service import RecommendationService
+        insights = RecommendationService.get_or_create_insights(
+            assessment_id=latest_assessment.assessment_id, user_id=user_id
+        )
+
+        render_insight_card(
+            title="Assessment Summary & Clinical Context",
+            description=insights.summary_text,
+            source="HeartGuard Recommendation Engine",
+        )
+
+        if insights.recommendations:
+            st.markdown("#### Priority-Ranked Guidance")
+            for rec in insights.recommendations[:5]:
+                render_recommendation_card(rec)
+
+            if len(insights.recommendations) > 5:
+                with st.expander(f"📋 View All {len(insights.recommendations)} Recommendations", expanded=False):
+                    for rec in insights.recommendations[5:]:
+                        render_recommendation_card(rec)
+        else:
+            st.info("No personalized recommendations are available for this assessment.")
+
+    except Exception as exc:
+        st.warning("Unable to generate recommendations right now. Your original HeartGuard assessment is still available.")
+
+safe_render_section("AI Recommendations & Insights", _render_recommendations_section)
+st.divider()
 
 # ── Recent Assessments Table ──────────────────────────────────────────────────
 def _render_recent_table() -> None:

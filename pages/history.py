@@ -259,6 +259,39 @@ if assessment_options:
             else:
                 st.caption("Explainability details are available only for assessments where SHAP results were stored.")
 
+            # Phase 13: AI Insights & Recommendations
+            try:
+                from src.recommendations.recommendation_service import RecommendationService
+                from src.ui import render_recommendation_card
+                insights = RecommendationService.get_or_create_insights(
+                    assessment_id=selected_id, user_id=user_id
+                )
+                if insights.summary_text:
+                    st.markdown("---")
+                    st.markdown("##### 💡 AI Assessment Insights")
+                    st.info(insights.summary_text)
+
+                if insights.recommendations:
+                    st.markdown("##### 📌 Personalized Guidance")
+                    for rec in insights.recommendations[:3]:
+                        render_recommendation_card(rec)
+            except Exception as exc:
+                logger.debug("Could not load history recommendations: %s", exc)
+
+            # Professional Review Status (strictly separated)
+            try:
+                from src.review.review_service import ReviewService
+                from src.ui import get_review_status_badge
+                rev = ReviewService.get_review_for_assessment(selected_id)
+                if rev is not None:
+                    st.markdown("---")
+                    st.markdown("##### 🩺 Professional Review Status")
+                    st.markdown(get_review_status_badge(rev.review_status))
+                    if rev.professional_notes:
+                        st.caption(f"Reviewer observations: {rev.professional_notes}")
+            except Exception:
+                pass
+
         # Report Generation
         r_col1, r_col2 = st.columns([2, 5])
         with r_col1:

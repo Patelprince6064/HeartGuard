@@ -14,6 +14,7 @@ import streamlit as st
 
 from src.ui.badges import (
     get_alert_status_badge,
+    get_priority_badge,
     get_risk_category_badge,
     get_review_status_badge,
 )
@@ -143,3 +144,46 @@ def render_assessment_summary_card(
                 "pages/history.py",
                 label="🔍 View Assessment in History & Download Report →",
             )
+
+
+def render_recommendation_card(rec: Any) -> None:
+    """Render an accessible card for a personalized non-diagnostic recommendation."""
+    if hasattr(rec, "to_dict"):
+        data = rec.to_dict()
+    elif isinstance(rec, dict):
+        data = rec
+    else:
+        return
+
+    title = data.get("title", "Recommendation")
+    desc = data.get("description", "")
+    priority = data.get("priority", "INFO")
+    category = data.get("category", "General")
+    source = data.get("source", "Rule Engine")
+
+    with st.container(border=True):
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**{title}**")
+            st.caption(f"📁 Category: **{category}** · Source: `{source}`")
+        with col2:
+            st.markdown(get_priority_badge(priority))
+
+        st.markdown(desc)
+
+
+def render_insight_card(
+    title: str,
+    description: str,
+    source: str = "AI Multimodal Engine",
+    caption: str | None = None,
+) -> None:
+    """Render an individual AI insight highlight card."""
+    with st.container(border=True):
+        st.markdown(f"##### {title}")
+        st.markdown(description)
+        sub = f"Source: `{source}`"
+        if caption:
+            sub += f" · {caption}"
+        st.caption(sub)
+

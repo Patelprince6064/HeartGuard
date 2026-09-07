@@ -58,6 +58,8 @@ AUDIT_DB_PATH = SECURITY_DATA_DIRECTORY / "audit.db"
 ALERTS_DB_PATH = ALERT_DIRECTORY / "alerts.db"
 ASSESSMENTS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "assessments.db"
 REVIEWS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "reviews.db"
+RECOMMENDATIONS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "recommendations.db"
+RECOMMENDATION_ENGINE_VERSION = "1.0.0"
 
 # ---------------------------------------------------------------------------
 # Ensure directories exist
