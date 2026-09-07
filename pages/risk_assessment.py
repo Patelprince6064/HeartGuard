@@ -1,7 +1,9 @@
-"""Unified Multimodal Risk Assessment Page for HeartGuard (Phase 7).
+"""Unified Multimodal Risk Assessment Page for HeartGuard (Phase 7 + Phase 9).
 
 Integrates Clinical ML predictions (70%) and Lifestyle NLP risk scoring (30%)
 into a single, explainable cardiovascular risk assessment interface.
+
+Phase 9: Authentication required. Lifestyle text is never logged.
 """
 
 from __future__ import annotations
@@ -11,6 +13,8 @@ import pandas as pd
 import streamlit as st
 
 from config.settings import MODEL_DIRECTORY, REPORT_DIRECTORY
+from src.auth.authorization import require_authentication
+from src.auth.session_manager import clear_session, get_current_user
 from src.risk_engine.multimodal_risk import MultimodalRiskEngine
 from src.risk_engine.risk_categories import (
     CATEGORY_APPOINTMENT,
@@ -20,8 +24,27 @@ from src.risk_engine.risk_categories import (
     LIFESTYLE_WEIGHT,
 )
 from src.risk_engine.risk_explanation import DISCLAIMER_TEXT
+from src.security.audit_logger import log_event
+from src.security.input_validator import validate_lifestyle_text_length
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 st.set_page_config(page_title="HeartGuard Risk Assessment", layout="wide")
+
+# ── Authorization ────────────────────────────────────────────────────────────
+require_authentication()
+current_user = get_current_user()
+
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"**{current_user['name']}**")
+    st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    if st.button("🚪 Log Out", use_container_width=True, key="risk_logout"):
+        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
+        clear_session()
+        st.switch_page("pages/login.py")
 
 st.title("HeartGuard Risk Assessment")
 st.markdown(
@@ -197,6 +220,13 @@ if assess_clicked:
     if not lifestyle_text or not lifestyle_text.strip():
         st.warning("Lifestyle description is required for multimodal assessment. Please enter lifestyle details above.")
     else:
+        # Validate lifestyle text length (security check) — text is NOT logged
+        try:
+            validate_lifestyle_text_length(lifestyle_text)
+        except ValueError as ve:
+            st.error(str(ve))
+            st.stop()
+
         with st.spinner("Executing multimodal risk assessment pipeline..."):
             try:
                 engine = MultimodalRiskEngine()
@@ -205,15 +235,18 @@ if assess_clicked:
                     lifestyle_text=lifestyle_text,
                     include_shap=True,
                 )
-
-                # Store in session state
+                # Store in session state tagged with user_id for isolation
                 st.session_state["assessment_result"] = assessment
+                st.session_state["assessment_user_id"] = current_user["id"]
 
             except Exception as exc:
-                st.error(f"Multimodal assessment failed: {exc}")
-                import traceback
-
-                st.code(traceback.format_exc(), language="python")
+                # NEVER display raw traceback to the user
+                logger.error(
+                    "Risk assessment failed for user_id=%s: %s",
+                    current_user["id"],
+                    type(exc).__name__,  # type only — no patient data in log
+                )
+                st.error("Something went wrong during the risk assessment. Please try again.")
 
 # ---------------------------------------------------------------------------
 # Section 4: Assessment Results Display

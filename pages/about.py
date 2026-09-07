@@ -1,10 +1,33 @@
-"""About page for HeartGuard."""
+"""About page for HeartGuard (Phase 9)."""
 
 import streamlit as st
 
 from config.settings import PROJECT_NAME, PROJECT_VERSION
+from src.auth.authorization import require_authentication
+from src.auth.session_manager import clear_session, get_current_user
+from src.security.audit_logger import log_event
+
+st.set_page_config(page_title="About HeartGuard", layout="wide")
+
+# ── Authorization ────────────────────────────────────────────────────────────
+require_authentication()
+current_user = get_current_user()
+
+with st.sidebar:
+    st.markdown(f"**{current_user['name']}**")
+    st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    if st.button("🚪 Log Out", use_container_width=True, key="about_logout"):
+        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
+        clear_session()
+        st.switch_page("pages/login.py")
 
 st.title("About HeartGuard")
+
+st.info(
+    "🔒 **Privacy Notice:** HeartGuard is an academic/research prototype. "
+    "Do not enter real patient information into a public/demo deployment."
+)
 
 st.markdown(
     "**Disclaimer:** HeartGuard is an academic/research prototype and is not a "

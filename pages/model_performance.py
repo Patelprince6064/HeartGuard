@@ -1,4 +1,4 @@
-"""Model Performance page for HeartGuard."""
+"""Model Performance page for HeartGuard (Phase 9 — Admin Only)."""
 
 from __future__ import annotations
 
@@ -9,9 +9,25 @@ import pandas as pd
 import streamlit as st
 
 from config.settings import MODEL_DIRECTORY, REPORT_DIRECTORY
+from src.auth.authorization import require_role
+from src.auth.session_manager import clear_session, get_current_user
+from src.security.audit_logger import log_event
 
 st.set_page_config(page_title="Model Performance", layout="wide")
-st.title("Model Performance")
+
+# ── Authorization (Admin only) ───────────────────────────────────────────────
+require_role("ADMIN")
+current_user = get_current_user()
+
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"**{current_user['name']}**")
+    st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    if st.button("🚪 Log Out", use_container_width=True, key="model_perf_logout"):
+        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
+        clear_session()
+        st.switch_page("pages/login.py")
 
 st.markdown(
     "**Disclaimer:** HeartGuard is an academic/research prototype and is not a "

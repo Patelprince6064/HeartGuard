@@ -34,12 +34,16 @@ env/
 models/*
 data/processed/*
 data/alerts/*
+data/auth/*
+data/security/*
 reports/generated/*
 
 # Keep directory structure
 !models/.gitkeep
 !data/processed/.gitkeep
 !data/alerts/.gitkeep
+!data/auth/.gitkeep
+!data/security/.gitkeep
 !reports/generated/.gitkeep
 
 # pytest
@@ -48,3 +52,8 @@ reports/generated/*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Database files — never commit real data
+*.db
+*.sqlite
+*.sqlite3

@@ -1,4 +1,4 @@
-"""Dashboard page for HeartGuard."""
+"""Dashboard page for HeartGuard (Phase 9 — Auth Protected)."""
 
 import streamlit as st
 
@@ -9,6 +9,23 @@ from config.settings import (
     RAW_DATA_DIRECTORY,
     REPORT_DIRECTORY,
 )
+from src.auth.authorization import require_authentication
+from src.auth.session_manager import clear_session, get_current_user
+from src.security.audit_logger import log_event
+
+# ── Authorization ────────────────────────────────────────────────────────────
+require_authentication()
+current_user = get_current_user()
+
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"**{current_user['name']}**")
+    st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    if st.button("🚪 Log Out", use_container_width=True, key="dashboard_logout"):
+        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
+        clear_session()
+        st.switch_page("pages/login.py")
 
 st.title("Dashboard")
 

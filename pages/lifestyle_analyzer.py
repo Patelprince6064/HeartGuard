@@ -1,7 +1,6 @@
-"""Lifestyle Risk Analyzer Streamlit Page for HeartGuard (Phase 6).
+"""Lifestyle Risk Analyzer Streamlit Page for HeartGuard (Phase 6 + Phase 9).
 
-Provides an interactive user interface to analyze free-text lifestyle
-descriptions for cardiovascular risk signals using rule-based NLP.
+Phase 9: Authentication required. Lifestyle text is never logged.
 """
 
 from __future__ import annotations
@@ -9,10 +8,30 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from src.auth.authorization import require_authentication
+from src.auth.session_manager import clear_session, get_current_user
 from src.nlp.explanation import DISCLAIMER_TEXT
 from src.nlp.lifestyle_analyzer import MAX_INPUT_CHARACTERS, LifestyleAnalyzer
+from src.security.audit_logger import log_event
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 st.set_page_config(page_title="Lifestyle Risk Analyzer", layout="wide")
+
+# ── Authorization ────────────────────────────────────────────────────────────
+require_authentication()
+current_user = get_current_user()
+
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"**{current_user['name']}**")
+    st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    if st.button("🚪 Log Out", use_container_width=True, key="lifestyle_logout"):
+        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
+        clear_session()
+        st.switch_page("pages/login.py")
 
 st.title("Lifestyle Risk Analyzer")
 st.markdown(
@@ -75,14 +94,21 @@ if analyze_clicked:
         )
     else:
         with st.spinner("Analyzing lifestyle description with HeartGuard NLP..."):
-            analyzer = LifestyleAnalyzer()
-            result = analyzer.analyze(user_text)
+            try:
+                analyzer = LifestyleAnalyzer()
+                # Lifestyle text is processed but NEVER logged
+                result = analyzer.analyze(user_text)
 
-            score = result["lifestyle_score"]
-            category = result["risk_category"]
-            detected = result["detected_risk_factors"]
-            top_factors = result["top_risk_factors"]
-            summary = result["summary"]
+                score = result["lifestyle_score"]
+                category = result["risk_category"]
+                detected = result["detected_risk_factors"]
+                top_factors = result["top_risk_factors"]
+                summary = result["summary"]
+            except Exception:
+                # Never log the lifestyle text — log only error type
+                logger.error("Lifestyle analysis failed for user_id=%s", current_user["id"])
+                st.error("Something went wrong during the analysis. Please try again.")
+                st.stop()
 
             st.divider()
             st.markdown("### Analysis Results")
