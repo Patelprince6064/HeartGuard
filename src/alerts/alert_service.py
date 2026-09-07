@@ -1,12 +1,18 @@
-"""Emergency alert service module for HeartGuard.
+"""Emergency alert service module for HeartGuard (Phase 8).
 
-Provides function signatures for sending alerts.
-Actual Twilio implementation will be done in Phase 10.
+Provides convenience functional entry points and backward compatibility
+for the HeartGuard alert subsystem.
 """
 
-from datetime import datetime
-from typing import Any, Optional
+from __future__ import annotations
 
+from typing import Any
+
+from src.alerts.alert_history import record_alert
+from src.alerts.alert_manager import AlertManager
+from src.alerts.alert_validation import validate_alert_config
+from src.alerts.twilio_service import TwilioSMSService
+from src.risk_engine.risk_categories import CRITICAL_THRESHOLD
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,37 +22,30 @@ def send_sms_alert(
     phone_number: str,
     message: str,
 ) -> dict[str, Any]:
-    """Send an SMS alert via Twilio.
-
-    Placeholder for future implementation.
+    """Send an SMS alert via Twilio service.
 
     Args:
         phone_number: Recipient phone number.
         message: Alert message text.
 
     Returns:
-        Dictionary with delivery status.
-
-    Raises:
-        NotImplementedError: Always, until Phase 10.
+        dict: Delivery status and message metadata.
     """
-    raise NotImplementedError("SMS alert sending will be implemented in Phase 10")
+    service = TwilioSMSService()
+    return service.send_sms(phone_number, message)
 
 
-def check_alert_threshold(risk_score: float, threshold: float = 85.0) -> bool:
-    """Check if risk score exceeds alert threshold.
-
-    Placeholder for future implementation.
+def check_alert_threshold(risk_score: float, threshold: float = CRITICAL_THRESHOLD) -> bool:
+    """Check if risk score exceeds the emergency alert threshold (> 85%).
 
     Args:
-        risk_score: Patient risk score.
-        threshold: Alert threshold value.
+        risk_score: Patient risk score (0 - 100).
+        threshold: Alert threshold value (default: 85.0).
 
     Returns:
-        True if alert should be sent.
+        bool: True if alert threshold is exceeded.
     """
-    logger.warning("check_alert_threshold is a placeholder")
-    return risk_score >= threshold
+    return risk_score > threshold
 
 
 def log_alert(
@@ -55,26 +54,22 @@ def log_alert(
     alert_type: str,
     status: str = "pending",
 ) -> dict[str, Any]:
-    """Log an alert to the alerts directory.
-
-    Placeholder for future implementation.
+    """Log an alert event to the persistent audit repository.
 
     Args:
         patient_id: Patient identifier.
         risk_score: Risk score that triggered alert.
-        alert_type: Type of alert.
+        alert_type: Type of alert (e.g. 'critical').
         status: Alert delivery status.
 
     Returns:
-        Dictionary with alert log entry.
+        dict: Recorded alert dictionary.
     """
-    alert_entry = {
-        "timestamp": datetime.now().isoformat(),
-        "patient_id": patient_id,
-        "risk_score": risk_score,
-        "alert_type": alert_type,
-        "status": status,
-    }
-
-    logger.info(f"Alert logged for patient {patient_id}: {alert_type}")
-    return alert_entry
+    return record_alert(
+        assessment_id=patient_id,
+        risk_score=risk_score,
+        risk_level=alert_type.upper(),
+        recipient_type="general",
+        recipient_phone="Unspecified",
+        status=status.upper(),
+    )
