@@ -36,16 +36,16 @@ def send_sms_alert(
 
 
 def check_alert_threshold(risk_score: float, threshold: float = CRITICAL_THRESHOLD) -> bool:
-    """Check if risk score exceeds the emergency alert threshold (> 85%).
+    """Check if risk score meets or exceeds the emergency alert threshold (>= 85%).
 
     Args:
         risk_score: Patient risk score (0 - 100).
         threshold: Alert threshold value (default: 85.0).
 
     Returns:
-        bool: True if alert threshold is exceeded.
+        bool: True if alert threshold is reached.
     """
-    return risk_score > threshold
+    return risk_score >= threshold
 
 
 def log_alert(
@@ -65,7 +65,7 @@ def log_alert(
     Returns:
         dict: Recorded alert dictionary.
     """
-    return record_alert(
+    res = record_alert(
         assessment_id=patient_id,
         risk_score=risk_score,
         risk_level=alert_type.upper(),
@@ -73,3 +73,8 @@ def log_alert(
         recipient_phone="Unspecified",
         status=status.upper(),
     )
+    # Backward-compatible alias keys
+    res["patient_id"] = patient_id
+    res["alert_type"] = alert_type
+    res["status"] = status
+    return res

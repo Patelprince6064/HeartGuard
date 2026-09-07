@@ -16,7 +16,7 @@ load_dotenv()
 # Project metadata
 # ---------------------------------------------------------------------------
 PROJECT_NAME = "HeartGuard"
-PROJECT_VERSION = "0.9.0"
+PROJECT_VERSION = "0.1.0"
 
 # ---------------------------------------------------------------------------
 # Risk scoring weights (Phase 7 — must not change)

@@ -12,12 +12,13 @@ def test_alert_module_importable():
     assert hasattr(alert_service, "log_alert")
 
 
-def test_send_sms_alert_not_implemented():
-    """Test that send_sms_alert raises NotImplementedError."""
+def test_send_sms_alert():
+    """Test that send_sms_alert returns delivery status dictionary."""
     from src.alerts.alert_service import send_sms_alert
 
-    with pytest.raises(NotImplementedError):
-        send_sms_alert("1234567890", "test")
+    res = send_sms_alert("1234567890", "test")
+    assert isinstance(res, dict)
+    assert "success" in res
 
 
 def test_check_alert_threshold():

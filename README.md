@@ -435,10 +435,66 @@ pytest tests/test_multimodal_risk.py -v
 
 ---
 
-## Future Phases (Upcoming)
+## Phase 8: Emergency Alert & Notification System (DONE)
 
-- Phase 8: Emergency Alerts (Twilio SMS Notifications)
-- Phase 9: PDF Patient Reports & Full Application Deployment
+HeartGuard provides an automated emergency notification module to dispatch urgent alerts when a multimodal risk evaluation indicates critical cardiovascular risk.
+
+### Key Capabilities
+
+1. **Threshold-Based Emergency Triage**:
+   - Strictly triggered when multimodal risk $> 85.0\%$ (`CRITICAL`).
+   - Non-critical scores ($\le 85.0\%$) are logged with `NOT_TRIGGERED` without contacting external dispatchers.
+
+2. **Twilio SMS Dispatch**:
+   - Formatted SMS notifications sent to registered clinician and emergency contact numbers.
+   - Idempotent alert dispatch prevents duplicate SMS transmissions for the same assessment ID.
+
+3. **Privacy & Demo Mode**:
+   - Phone numbers are masked (`+1*****4567`) in all user interfaces and audit logs.
+   - Configurable `ALERTS_ENABLED` flag runs in Demo Mode by default to prevent unintended dispatches during development/testing.
+
+---
+
+## Phase 9: Security, Authentication & Production Hardening (DONE)
+
+HeartGuard implements an end-to-end security architecture tailored for academic and clinical demo deployment.
+
+### Key Capabilities
+
+1. **Authentication & Password Security**:
+   - Secure credential storage using **bcrypt** with a work factor of **12 rounds**.
+   - Timing-attack resistant verification with generic error responses to prevent user enumeration.
+   - Safe model serialization (`to_safe_dict()`) ensuring password hashes are never exposed.
+
+2. **Role-Based Access Control (RBAC)**:
+   - Two distinct roles: `PATIENT` and `ADMIN`.
+   - Patients can access personal risk calculations and lifestyle assessments.
+   - Administrators manage system configuration, audit logs, user accounts, and deep model explainability diagnostics.
+   - Admin account provisioning is strictly restricted to an out-of-band CLI tool (`scripts/create_admin.py`).
+
+3. **Input Validation & Sanitization**:
+   - Comprehensive sanitization against Cross-Site Scripting (XSS) and SMS header injection.
+   - Strict length bounds on email (255 chars), name (100 chars), password (min 8 chars), and lifestyle narratives (5,000 chars).
+
+4. **Security Audit Logging & Rate Limiting**:
+   - Structured security events recorded in an isolated SQLite database (`data/security/audit.db`).
+   - Session-state rate limiting on login attempts (5 attempts, 60s lockout) to thwart brute-force attacks.
+
+5. **Patient Privacy Protection**:
+   - Clinician and emergency phone numbers are masked across all UI surfaces and database records.
+   - Free-form lifestyle narratives and raw clinical vectors are excluded from application and audit logs.
+
+### Running Security Tests
+
+```bash
+# Run full test suite
+pytest -q
+
+# Run Phase 9 security and authentication tests
+pytest tests/test_auth.py tests/test_authorization.py tests/test_security.py tests/test_alert_security.py -v
+```
+
+---
 
 ## Medical Disclaimer
 

@@ -23,17 +23,19 @@ ALERTS_DIR = DATA_DIRECTORY / "alerts"
 DB_PATH = ALERTS_DIR / "alerts.db"
 
 
-def _get_connection(db_path: Path = DB_PATH) -> sqlite3.Connection:
+def _get_connection(db_path: Path | None = None) -> sqlite3.Connection:
     """Ensure database directory exists and return a SQLite connection."""
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(db_path), timeout=10.0)
+    target_path = db_path if db_path is not None else DB_PATH
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(target_path), timeout=10.0)
     conn.row_factory = sqlite3.Row
     return conn
 
 
-def init_alert_db(db_path: Path = DB_PATH) -> None:
+def init_alert_db(db_path: Path | None = None) -> None:
     """Initialize the alerts database table and indexes if not present."""
-    with _get_connection(db_path) as conn:
+    target_path = db_path if db_path is not None else DB_PATH
+    with _get_connection(target_path) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS alerts (
@@ -64,7 +66,7 @@ def record_alert(
     status: str,
     message_sid: str | None = None,
     error_message: str | None = None,
-    db_path: Path = DB_PATH,
+    db_path: Path | None = None,
 ) -> dict[str, Any]:
     """Record an alert event into the persistent audit repository.
 
@@ -82,11 +84,12 @@ def record_alert(
     Returns:
         dict: The persisted record dictionary.
     """
-    init_alert_db(db_path)
+    target_path = db_path if db_path is not None else DB_PATH
+    init_alert_db(target_path)
     now_iso = datetime.now(timezone.utc).isoformat()
     masked_phone = mask_phone_number(recipient_phone)
 
-    with _get_connection(db_path) as conn:
+    with _get_connection(target_path) as conn:
         cursor = conn.execute(
             """
             INSERT INTO alerts (
@@ -134,7 +137,7 @@ def record_alert(
 def is_alert_already_sent(
     assessment_id: str,
     recipient_type: str,
-    db_path: Path = DB_PATH,
+    db_path: Path | None = None,
 ) -> bool:
     """Check whether a successful alert was already dispatched for assessment and recipient.
 
@@ -148,8 +151,9 @@ def is_alert_already_sent(
     Returns:
         bool: True if already sent successfully.
     """
-    init_alert_db(db_path)
-    with _get_connection(db_path) as conn:
+    target_path = db_path if db_path is not None else DB_PATH
+    init_alert_db(target_path)
+    with _get_connection(target_path) as conn:
         cursor = conn.execute(
             """
             SELECT 1 FROM alerts
@@ -161,7 +165,7 @@ def is_alert_already_sent(
         return cursor.fetchone() is not None
 
 
-def get_alert_history(limit: int = 50, db_path: Path = DB_PATH) -> list[dict[str, Any]]:
+def get_alert_history(limit: int = 50, db_path: Path | None = None) -> list[dict[str, Any]]:
     """Retrieve recent alert audit history records.
 
     Args:
@@ -171,8 +175,9 @@ def get_alert_history(limit: int = 50, db_path: Path = DB_PATH) -> list[dict[str
     Returns:
         list[dict]: List of alert record dictionaries sorted by timestamp desc.
     """
-    init_alert_db(db_path)
-    with _get_connection(db_path) as conn:
+    target_path = db_path if db_path is not None else DB_PATH
+    init_alert_db(target_path)
+    with _get_connection(target_path) as conn:
         cursor = conn.execute(
             """
             SELECT id, assessment_id, timestamp, risk_score, risk_level,
@@ -187,9 +192,10 @@ def get_alert_history(limit: int = 50, db_path: Path = DB_PATH) -> list[dict[str
         return [dict(r) for r in rows]
 
 
-def clear_alert_history(db_path: Path = DB_PATH) -> None:
+def clear_alert_history(db_path: Path | None = None) -> None:
     """Clear all records from alerts table (used for test setup/teardown)."""
-    init_alert_db(db_path)
-    with _get_connection(db_path) as conn:
+    target_path = db_path if db_path is not None else DB_PATH
+    init_alert_db(target_path)
+    with _get_connection(target_path) as conn:
         conn.execute("DELETE FROM alerts")
         conn.commit()
