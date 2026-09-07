@@ -1,4 +1,4 @@
-"""Tests for lifestyle analyzer module."""
+"""Tests for lifestyle analyzer module integration."""
 
 import pytest
 
@@ -9,20 +9,23 @@ def test_lifestyle_module_importable():
 
     assert hasattr(lifestyle_analyzer, "analyze_lifestyle_text")
     assert hasattr(lifestyle_analyzer, "detect_risk_factors")
-    assert hasattr(lifestyle_analyzer, "calculate_lifestyle_score")
+    assert hasattr(lifestyle_analyzer, "LifestyleAnalyzer")
 
 
-def test_analyze_lifestyle_text_not_implemented():
-    """Test that analyze_lifestyle_text raises NotImplementedError."""
+def test_analyze_lifestyle_text_works():
+    """Test that analyze_lifestyle_text returns analysis dict."""
     from src.nlp.lifestyle_analyzer import analyze_lifestyle_text
 
-    with pytest.raises(NotImplementedError):
-        analyze_lifestyle_text("test")
+    res = analyze_lifestyle_text("I smoke 10 cigarettes a day.")
+    assert res["lifestyle_score"] == 25
+    assert res["risk_category"] == "LOW"
+    assert len(res["detected_risk_factors"]) == 1
 
 
-def test_detect_risk_factors_not_implemented():
-    """Test that detect_risk_factors raises NotImplementedError."""
+def test_detect_risk_factors_works():
+    """Test that detect_risk_factors returns risk factor names."""
     from src.nlp.lifestyle_analyzer import detect_risk_factors
 
-    with pytest.raises(NotImplementedError):
-        detect_risk_factors("test")
+    factors = detect_risk_factors("I eat oily food and smoke.")
+    assert "smoking" in factors
+    assert "unhealthy_diet" in factors

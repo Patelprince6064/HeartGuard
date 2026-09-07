@@ -351,11 +351,55 @@ pytest tests/test_shap.py -v
 
 ---
 
+## Phase 6: Lifestyle Text Analyzer / NLP Module (DONE)
+
+HeartGuard provides an explainable, rule-based NLP module that analyzes free-text patient lifestyle descriptions to identify cardiovascular risk signals and calculate a quantified lifestyle score (0–100).
+
+### Key Capabilities
+
+1. **Predefined Risk Lexicon & Scoring**:
+   - Centralized risk weights and severities across 6 key lifestyle domains:
+     - **Smoking**: +25 points (High severity)
+     - **Family History**: +20 points (High severity)
+     - **Unhealthy Diet**: +18 points (Moderate severity)
+     - **Physical Inactivity**: +15 points (High severity)
+     - **Poor Sleep**: +12 points (Moderate severity)
+     - **Alcohol Use**: +10 points (Low severity)
+   - **Score Cap**: Mathematically capped at 100 points
+   - **Risk Categories**: `LOW` (0–29), `MODERATE` (30–59), `HIGH` (60–84), `CRITICAL` (85–100)
+
+2. **NLTK Text Preprocessing & Fallbacks**:
+   - Text normalization, punctuation preservation for decimals (e.g. *5.5 hours*), and whitespace standardization
+   - NLTK `punkt`/`punkt_tab` tokenization with offline regex fallback
+
+3. **Intelligent Rule-Based Matching**:
+   - **Multi-Word Phrase Matching**: Prioritizes longer phrases (*"no regular exercise"*, *"family history of heart attack"*)
+   - **Negation Detection**: Recognizes preceding negation cues (*"do not smoke"*, *"don't drink alcohol"*, *"avoid junk food"*)
+   - **Alcohol Disambiguation**: Prevents non-alcoholic drinks (*"drink 3 liters of water"*, *"drink coffee"*) from triggering alcohol risk
+   - **Quantitative Sleep Detection**: Parses numeric sleep duration (< 6 hours triggers Poor Sleep; ≥ 6 hours is adequate)
+   - **Positive Exercise Recognition**: Counters false-positive inactivity flags when active exercise habits are noted
+
+4. **Streamlit Lifestyle Analyzer**:
+   - Interactive UI at `pages/lifestyle_analyzer.py`
+   - Real-time score meter, category badges, detected risk factor evidence table, and risk breakdown charts
+   - Patient-friendly clinical narratives and top 3 risk factors
+
+### Running Tests
+
+```bash
+# Full test suite (222 passing)
+pytest -q
+
+# Phase 6 Lifestyle NLP tests only (26 passing)
+pytest tests/test_lifestyle_analyzer.py -v
+```
+
+---
+
 ## Future Phases (Upcoming)
 
-- Phase 6: Lifestyle NLP Analysis
-- Phase 7: Multimodal Risk Engine (Clinical + Lifestyle)
-- Phase 8: Emergency Alerts (Twilio SMS)
+- Phase 7: Multimodal Risk Engine (70% Clinical ML + 30% Lifestyle NLP)
+- Phase 8: Emergency Alerts (Twilio SMS Notifications)
 - Phase 9: PDF Patient Reports & Full Streamlit App Deployment
 
 ## Medical Disclaimer
