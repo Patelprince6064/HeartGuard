@@ -38,6 +38,24 @@ log_event(
     detail="Admin dashboard accessed",
 )
 
+# ── Sidebar ───────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"**{current_user['name']}**")
+    st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    st.page_link("pages/dashboard.py", label="📊 Patient Dashboard")
+    st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
+    st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
+    st.page_link("pages/history.py", label="📜 Assessments & History")
+    st.page_link("pages/model_performance.py", label="📈 Model Performance")
+    st.page_link("pages/security.py", label="🔐 Security & Audit Log")
+    st.divider()
+    if st.button("🚪 Log Out", use_container_width=True, key="admin_logout"):
+        from src.auth.session_manager import clear_session
+        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
+        clear_session()
+        st.switch_page("pages/login.py")
+
 # ── Header ──────────────────────────────────────────────────────────────────
 st.title("🛡️ Admin Dashboard")
 st.caption(f"Logged in as **{current_user['name']}** · Role: `{current_user['role']}`")
@@ -143,17 +161,26 @@ with a4:
 
 st.divider()
 
+from src.ui import (
+    prepare_alert_distribution_chart,
+    prepare_category_distribution_chart,
+    prepare_review_distribution_chart,
+    render_chart,
+)
+
 # ── User Statistics ───────────────────────────────────────────────────────────
 st.markdown("### User Statistics")
 
 try:
     role_counts = count_users_by_role()
-    u1, u2, u3 = st.columns(3)
+    u1, u2, u3, u4 = st.columns(4)
     with u1:
         st.metric("Patient Accounts", role_counts.get("PATIENT", 0))
     with u2:
-        st.metric("Admin Accounts", role_counts.get("ADMIN", 0))
+        st.metric("Reviewer Accounts", role_counts.get("REVIEWER", 0))
     with u3:
+        st.metric("Admin Accounts", role_counts.get("ADMIN", 0))
+    with u4:
         total = sum(role_counts.values())
         st.metric("Total Active Users", total)
 except Exception:
@@ -161,41 +188,77 @@ except Exception:
 
 st.divider()
 
-# ── System Assessment Analytics (Phase 10) ──────────────────────────────────
-st.markdown("### 📊 System Assessment Analytics")
+# ── System Assessment Analytics (Phase 12) ──────────────────────────────────
+st.markdown("### 📊 System Assessment & Review Analytics")
 st.caption("Aggregated platform metrics. Individual patient medical data and lifestyle narratives are never exposed.")
 
 try:
     from src.analytics.analytics_service import AnalyticsService
     import pandas as pd
     sys_stats = AnalyticsService.get_admin_aggregated_analytics()
+    rev_stats = sys_stats.get("review_statistics", {})
 
-    sa1, sa2, sa3 = st.columns(3)
+    sa1, sa2, sa3, sa4, sa5 = st.columns(5)
     with sa1:
-        st.metric("Total Assessments Conducted", sys_stats["total_assessments"])
+        st.metric("Total Assessments", sys_stats["total_assessments"])
     with sa2:
         st.metric("Assessed Patients", sys_stats["active_patients"])
     with sa3:
-        st.metric("System Mean Risk Score", f"{sys_stats['average_system_risk']:.1f}%")
+        st.metric("System Mean Risk", f"{sys_stats['average_system_risk']:.1f}%")
+    with sa4:
+        st.metric("Total Reviews", rev_stats.get("total_reviews", 0))
+    with sa5:
+        pending_total = rev_stats.get("pending", 0) + rev_stats.get("unassigned_pending", 0)
+        st.metric("Pending Reviews", pending_total)
 
-    if sys_stats["total_assessments"] > 0:
+    if sys_stats["total_assessments"] > 0 or rev_stats.get("total_reviews", 0) > 0:
         c_col1, c_col2 = st.columns(2)
         with c_col1:
-            st.markdown("#### Risk Category Distribution")
-            st.dataframe(
-                pd.DataFrame(list(sys_stats["category_distribution"].items()), columns=["Category", "Count"]),
-                use_container_width=True,
-                hide_index=True,
-            )
+            cat_chart = prepare_category_distribution_chart(sys_stats.get("category_distribution", {}))
+            if cat_chart is not None:
+                render_chart(cat_chart)
+            else:
+                st.markdown("#### Risk Category Distribution")
+                st.dataframe(
+                    pd.DataFrame(list(sys_stats["category_distribution"].items()), columns=["Category", "Count"]),
+                    use_container_width=True,
+                    hide_index=True,
+                )
         with c_col2:
+            rev_dist = sys_stats.get("review_distribution", {})
+            rev_chart = prepare_review_distribution_chart(rev_dist)
+            if rev_chart is not None:
+                render_chart(rev_chart)
+            else:
+                st.markdown("#### Review Distribution")
+                st.dataframe(
+                    pd.DataFrame(list(rev_dist.items()), columns=["Status", "Count"]),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+        c_col3, c_col4 = st.columns(2)
+        with c_col3:
+            alert_dist = sys_stats.get("alert_status_distribution", {})
+            alert_chart = prepare_alert_distribution_chart(alert_dist)
+            if alert_chart is not None:
+                render_chart(alert_chart)
+            else:
+                st.markdown("#### Alert Dispatch Statistics")
+                st.dataframe(
+                    pd.DataFrame(list(alert_dist.items()), columns=["Outcome", "Count"]),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+        with c_col4:
             st.markdown("#### Model Version Usage")
             st.dataframe(
                 pd.DataFrame(list(sys_stats["model_version_distribution"].items()), columns=["Model Version", "Usage Count"]),
                 use_container_width=True,
                 hide_index=True,
             )
-except Exception:
-    st.warning("Unable to load assessment analytics.")
+except Exception as exc:
+    st.warning(f"Unable to load assessment analytics: {exc}")
 
 st.divider()
 

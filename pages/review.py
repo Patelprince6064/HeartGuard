@@ -30,6 +30,17 @@ from src.review import (
 from src.security.audit_logger import log_event
 from src.utils.logger import get_logger
 
+from src.ui import (
+    get_alert_status_badge,
+    get_review_status_badge,
+    get_risk_category_badge,
+    prepare_review_distribution_chart,
+    prepare_risk_components_chart,
+    prepare_shap_chart,
+    render_chart,
+    render_risk_components_cards,
+)
+
 logger = get_logger(__name__)
 
 st.set_page_config(
@@ -48,6 +59,11 @@ with st.sidebar:
     st.markdown(f"**{current_user['name']}**")
     st.caption(f"Role: `{current_user['role']}`")
     st.divider()
+    st.page_link("pages/dashboard.py", label="📊 Patient Dashboard")
+    st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
+    st.page_link("pages/history.py", label="📜 Assessments & Reports")
+    st.page_link("pages/security.py", label="🔐 Security & Profile")
+    st.divider()
     if st.button("🚪 Log Out", use_container_width=True, key="review_logout"):
         log_event("logout", "SUCCESS", user_id=reviewer_id, role=current_user["role"])
         clear_session()
@@ -55,7 +71,7 @@ with st.sidebar:
 
 # ── Page header ───────────────────────────────────────────────────────────────
 st.title("🩺 Doctor Review Portal")
-st.caption("Authorized professional review interface — Phase 11")
+st.caption("Authorized professional review interface — Phase 12")
 
 # ── Safety disclaimer ─────────────────────────────────────────────────────────
 st.error(
@@ -74,10 +90,40 @@ st.error(
 
 st.divider()
 
+# ── Review Queue KPI Metrics ──────────────────────────────────────────────────
+try:
+    rev_stats = ReviewService.get_review_statistics(reviewer_id=reviewer_id)
+    pending_total = rev_stats.get("pending", 0) + rev_stats.get("unassigned_pending", 0)
+
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Pending Reviews", pending_total)
+    k2.metric("In Review", rev_stats.get("in_review", 0))
+    k3.metric("Reviewed", rev_stats.get("reviewed", 0))
+    k4.metric("Follow-Up Recommended", rev_stats.get("follow_up_recommended", 0))
+    k5.metric("Total Assigned", rev_stats.get("total_assigned", 0))
+
+    if rev_stats.get("total_assigned", 0) > 0:
+        with st.expander("📊 Review Status Distribution", expanded=False):
+            dist_map = {
+                "PENDING": rev_stats.get("pending", 0),
+                "IN_REVIEW": rev_stats.get("in_review", 0),
+                "ACCEPTED": rev_stats.get("accepted", 0),
+                "MODIFIED": rev_stats.get("modified", 0),
+                "REJECTED": rev_stats.get("rejected", 0),
+            }
+            chart = prepare_review_distribution_chart(dist_map)
+            if chart is not None:
+                render_chart(chart)
+except Exception as exc:
+    logger.warning("Could not render review statistics: %s", exc)
+
+st.divider()
+
 # ── Tabs ──────────────────────────────────────────────────────────────────────
 tab_all, tab_pending, tab_my_reviews = st.tabs(
     ["📋 All Assessments", "⏳ Pending Review", "✅ My Reviews"]
 )
+
 
 
 # =============================================================================
@@ -125,6 +171,9 @@ def _render_review_detail(assessment_id: str) -> None:
     top_factors = assessment.get_top_clinical_factors()
     if top_factors:
         with st.expander("📊 Top Clinical SHAP Factors", expanded=False):
+            shap_chart = prepare_shap_chart(top_factors, top_n=8)
+            if shap_chart is not None:
+                render_chart(shap_chart)
             factors_data = [
                 {
                     "Feature": f.get("feature", "—"),

@@ -463,6 +463,84 @@ class ReviewService:
 
         return {"assessment": assessment, "review": review}
 
+    @staticmethod
+    def get_review_statistics(
+        reviewer_id: Optional[int] = None,
+        review_db_path: Optional[Path] = None,
+        assessment_db_path: Optional[Path] = None,
+    ) -> dict[str, int]:
+        """Aggregate review statistics for reviewer and admin dashboards.
+
+        Args:
+            reviewer_id: Optional reviewer ID filter. If None, aggregates system-wide.
+            review_db_path: Review DB path override for tests.
+            assessment_db_path: Assessment DB path override for tests.
+
+        Returns:
+            dict containing pending, in_review, accepted, modified, rejected,
+            reviewed, follow_up_recommended, urgency_count, total_assigned,
+            and unassigned_pending counts.
+        """
+        review_target = review_db_path or REVIEWS_DB_PATH
+        init_review_db(review_target)
+
+        where_clause = "WHERE reviewer_id = ?" if reviewer_id is not None else ""
+        params = (reviewer_id,) if reviewer_id is not None else ()
+
+        with _get_review_connection(review_db_path) as conn:
+            rows = conn.execute(
+                f"""
+                SELECT
+                    review_status,
+                    COUNT(*) as count,
+                    SUM(follow_up_required) as follow_up_count,
+                    SUM(urgency_flag) as urgency_count
+                FROM professional_reviews
+                {where_clause}
+                GROUP BY review_status;
+                """,
+                params,
+            ).fetchall()
+
+            status_counts = {r["review_status"]: int(r["count"]) for r in rows}
+            follow_up_total = sum(int(r["follow_up_count"] or 0) for r in rows)
+            urgency_total = sum(int(r["urgency_count"] or 0) for r in rows)
+            total_assigned = sum(status_counts.values())
+
+            pending_count = status_counts.get("PENDING", 0)
+            in_review_count = status_counts.get("IN_REVIEW", 0)
+            reviewed_standard = status_counts.get("REVIEWED", 0)
+            accepted_count = status_counts.get("ACCEPTED", 0)
+            modified_count = status_counts.get("MODIFIED", 0)
+            rejected_count = status_counts.get("REJECTED", 0)
+            reviewed_count = reviewed_standard + accepted_count + modified_count + rejected_count
+
+        unassigned_pending = 0
+        try:
+            unassigned_pending = len(
+                ReviewService.get_pending_assessments(
+                    assessment_db_path=assessment_db_path,
+                    review_db_path=review_db_path,
+                )
+            )
+        except Exception as exc:
+            logger.debug("Could not compute unassigned pending count: %s", exc)
+
+        return {
+            "pending": pending_count,
+            "in_review": in_review_count,
+            "accepted": accepted_count,
+            "modified": modified_count,
+            "rejected": rejected_count,
+            "reviewed": reviewed_count,
+            "follow_up_recommended": follow_up_total,
+            "urgency_count": urgency_total,
+            "total_assigned": total_assigned,
+            "unassigned_pending": unassigned_pending,
+            "total_reviews": total_assigned,
+            "status_distribution": status_counts,
+        }
+
     # -----------------------------------------------------------------------
     # Internal helpers
     # -----------------------------------------------------------------------
@@ -481,3 +559,4 @@ class ReviewService:
                 (assessment_id,),
             ).fetchone()
         return row is not None
+

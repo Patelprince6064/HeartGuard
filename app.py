@@ -32,11 +32,22 @@ if not is_authenticated():
 current_user = get_current_user()
 
 # ---------------------------------------------------------------------------
-# Sidebar — user info & logout
+# Sidebar — user info & navigation & logout
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown(f"**{current_user['name']}**")
     st.caption(f"Role: `{current_user['role']}`")
+    st.divider()
+    st.page_link("pages/dashboard.py", label="📊 Dashboard")
+    st.page_link("pages/risk_assessment.py", label="🩺 New Assessment")
+    st.page_link("pages/lifestyle_analyzer.py", label="🏃 Lifestyle Analyzer")
+    st.page_link("pages/history.py", label="📜 History & Reports")
+    st.page_link("pages/explainable_ai.py", label="🧬 Explainable AI")
+    if is_reviewer():
+        st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
+    if is_admin():
+        st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
+    st.page_link("pages/security.py", label="🔐 Security & Profile")
     st.divider()
     if st.button("🚪 Log Out", use_container_width=True):
         log_event(
@@ -132,4 +143,4 @@ if is_reviewer():
         st.page_link("pages/review.py", label="Open Doctor Review Portal →")
 
 st.divider()
-st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 11 — Doctor Review Portal Active")
+st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 12 — Advanced Dashboard & Visualizations Active")

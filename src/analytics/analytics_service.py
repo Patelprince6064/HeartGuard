@@ -42,6 +42,7 @@ class AnalyticsService:
                 "latest_risk": None,
                 "latest_category": None,
                 "latest_alert_status": None,
+                "latest_review_status": "NOT_REVIEWED",
                 "average_overall_risk": None,
                 "critical_count": 0,
             }
@@ -52,14 +53,50 @@ class AnalyticsService:
             1 for a in assessments if "CRITICAL" in a.risk_category.upper()
         )
 
+        latest_review_status = "NOT_REVIEWED"
+        try:
+            from src.review.review_service import ReviewService
+            rev = ReviewService.get_review_for_assessment(latest.assessment_id)
+            if rev is not None:
+                latest_review_status = rev.review_status
+        except Exception:
+            latest_review_status = "NOT_REVIEWED"
+
         return {
             "total_assessments": total,
             "latest_risk": latest.overall_risk,
             "latest_category": latest.risk_category,
             "latest_alert_status": latest.alert_status,
+            "latest_review_status": latest_review_status,
             "average_overall_risk": avg_risk,
             "critical_count": critical_count,
         }
+
+    @staticmethod
+    def get_user_recent_assessments(
+        user_id: int,
+        limit: int = 5,
+        db_path: Path | None = None,
+        review_db_path: Path | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetch the most recent assessments for a user with attached review status."""
+        assessments = HistoryService.get_user_assessments(
+            user_id=user_id, sort_order="desc", limit=limit, db_path=db_path
+        )
+        results = []
+        for a in assessments:
+            data = a.to_dict()
+            rev_status = "NOT_REVIEWED"
+            try:
+                from src.review.review_service import ReviewService
+                rev = ReviewService.get_review_for_assessment(a.assessment_id, review_db_path)
+                if rev is not None:
+                    rev_status = rev.review_status
+            except Exception:
+                rev_status = "NOT_REVIEWED"
+            data["review_status"] = rev_status
+            results.append(data)
+        return results
 
     @staticmethod
     def get_category_distribution(
@@ -81,8 +118,21 @@ class AnalyticsService:
             return {row["risk_category"]: int(row["count"]) for row in rows}
 
     @staticmethod
+    def get_review_distribution(
+        review_db_path: Path | None = None,
+    ) -> dict[str, int]:
+        """Aggregate review status distribution across the platform."""
+        try:
+            from src.review.review_service import ReviewService
+            stats = ReviewService.get_review_statistics(review_db_path=review_db_path)
+            return stats.get("status_distribution", {})
+        except Exception:
+            return {}
+
+    @staticmethod
     def get_admin_aggregated_analytics(
         db_path: Path | None = None,
+        review_db_path: Path | None = None,
     ) -> dict[str, Any]:
         """Aggregate system-wide assessment metrics for admin dashboards.
 
@@ -141,6 +191,18 @@ class AnalyticsService:
             ).fetchall()
             alert_dist = {r["alert_status"]: int(r["count"]) for r in alert_rows}
 
+            # Review metrics
+            review_stats = {}
+            review_dist = {}
+            try:
+                from src.review.review_service import ReviewService
+                review_stats = ReviewService.get_review_statistics(
+                    review_db_path=review_db_path, assessment_db_path=db_path
+                )
+                review_dist = AnalyticsService.get_review_distribution(review_db_path=review_db_path)
+            except Exception:
+                pass
+
             return {
                 "total_assessments": total_assessments,
                 "active_patients": active_patients,
@@ -148,4 +210,7 @@ class AnalyticsService:
                 "category_distribution": cat_dist,
                 "model_version_distribution": model_dist,
                 "alert_status_distribution": alert_dist,
+                "review_statistics": review_stats,
+                "review_distribution": review_dist,
             }
+

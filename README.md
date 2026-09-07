@@ -571,8 +571,48 @@ unset REVIEWER_PASSWORD
 ```bash
 # Run Phase 11 tests (43 tests)
 pytest tests/test_review_service.py tests/test_review_authorization.py -v
+```
 
-# Run full regression (310 passing)
+---
+
+## Phase 12 — Advanced Dashboard & Visualization
+
+Phase 12 upgrades HeartGuard into a modern, responsive, accessible AI healthcare research platform with specialized dashboards and reusable UI components.
+
+### Key Features
+
+- **Patient Dashboard** (`pages/dashboard.py`):
+  - Personalized greeting and academic prototype disclaimer banner.
+  - 5 KPI metric cards: Model-Based Risk, Risk Category badge, Total Assessments, Review Status badge, and Alert Status badge.
+  - Latest assessment summary panel with comparative delta analysis against prior evaluations.
+  - Risk component decomposition cards and Altair comparative chart (70% Clinical ML + 30% Lifestyle NLP).
+  - Chronological multimodal risk trajectory trend line with bounded 0–100% scale and tooltips.
+  - Explainable AI (SHAP) feature contribution chart strictly using non-diagnostic language.
+  - Structured lifestyle insights cards (sleep, stress, exercise, diet, smoking, etc.).
+  - Recent assessments table (5 latest records) with direct links to full history.
+  - Quick action buttons (role-aware).
+- **Reviewer Portal Enhancements** (`pages/review.py`):
+  - Queue summary KPI cards (Pending, In Review, Reviewed, Follow-Up Recommended, Total Assigned).
+  - Review queue distribution chart.
+  - Integrated SHAP and risk component charts for assessment inspection.
+- **Admin Dashboard Enhancements** (`pages/admin.py`):
+  - System-wide aggregated analytics (Total Assessments, Assessed Patients, System Mean Risk, Total Reviews, Pending Queue).
+  - Visual distribution charts for Risk Categories, Review Statuses, Alert Outcomes, and Model Version Usage.
+  - Strict privacy preservation (no raw patient medical narratives or PII).
+- **Reusable UI Design System** (`src/ui/`):
+  - Standardized badges (`src/ui/badges.py`) with text + iconography for colorblind accessibility.
+  - Standardized metric and summary cards (`src/ui/cards.py`).
+  - Altair visualization helpers (`src/ui/charts.py`).
+  - Data table renderers (`src/ui/tables.py`).
+  - High-level layout components and safe error boundaries (`src/ui/dashboard_components.py`).
+
+### Testing Phase 12
+
+```bash
+# Run Phase 12 tests (23 tests)
+pytest tests/test_dashboard_analytics.py tests/test_ui_components.py tests/test_dashboard_security.py -v
+
+# Run full regression suite (333 passing)
 pytest -q --ignore=tests/test_auth.py --ignore=tests/test_authorization.py --ignore=tests/test_security.py
 ```
 
