@@ -67,18 +67,26 @@ _CREATE_INDEXES_SQL = [
 class Recommendation:
     """Represents an individual personalized non-diagnostic recommendation."""
 
-    id: Optional[int]
-    recommendation_id: str
-    assessment_id: str
-    user_id: int
-    category: str
-    title: str
-    description: str
-    priority: str
-    source: str
-    rule_id: str
-    version: str
-    created_at: str
+    assessment_id: str = ""
+    category: str = ""
+    title: str = ""
+    description: str = ""
+    priority: str = "INFO"
+    source: str = "Rule Engine"
+    rule_id: str = ""
+    version: str = RECOMMENDATION_ENGINE_VERSION
+    user_id: int = 1
+    recommendation_id: str = ""
+    created_at: str = ""
+    id: Optional[int] = None
+
+    def __post_init__(self) -> None:
+        if not self.recommendation_id:
+            import uuid
+            self.recommendation_id = uuid.uuid4().hex[:12]
+        if not self.created_at:
+            from datetime import datetime, timezone
+            self.created_at = datetime.now(timezone.utc).isoformat()
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize recommendation to dictionary."""
@@ -96,6 +104,11 @@ class AssessmentInsights:
     recommendations: list[Recommendation]
     disclaimer: str = RECOMMENDATION_DISCLAIMER
     version: str = RECOMMENDATION_ENGINE_VERSION
+    comparison: Optional[dict[str, Any]] = None
+
+    @property
+    def trend_summary(self) -> str:
+        return self.comparison_summary or ""
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize insights object to dictionary."""
@@ -107,12 +120,13 @@ class AssessmentInsights:
             "recommendations": [r.to_dict() for r in self.recommendations],
             "disclaimer": self.disclaimer,
             "version": self.version,
+            "comparison": self.comparison,
         }
 
 
 def init_recommendation_db(db_path: Optional[Path] = None) -> None:
     """Initialize the recommendations database and schema if needed."""
-    target = db_path or RECOMMENDATIONS_DB_PATH
+    target = Path(db_path) if db_path is not None else RECOMMENDATIONS_DB_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(str(target), timeout=10.0) as conn:
         conn.execute(_CREATE_RECOMMENDATIONS_TABLE_SQL)

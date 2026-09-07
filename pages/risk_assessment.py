@@ -28,6 +28,7 @@ from src.analytics.history_service import HistoryService
 from src.risk_engine.risk_explanation import DISCLAIMER_TEXT
 from src.security.audit_logger import log_event
 from src.security.input_validator import validate_lifestyle_text_length
+from src.security.rate_limiter import check_rate_limit
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -214,14 +215,28 @@ st.divider()
 # Section 3: Assessment Trigger & Execution
 # ---------------------------------------------------------------------------
 
+acknowledgement = st.checkbox(
+    "I understand that this assessment is informational and does not replace professional medical advice.",
+    value=False,
+    help="Confirmation that you understand HeartGuard is an AI prototype for research and risk estimation.",
+)
+
 btn_col, _ = st.columns([2, 5])
 with btn_col:
     assess_clicked = st.button("Calculate Overall Risk", type="primary", use_container_width=True)
 
 if assess_clicked:
-    if not lifestyle_text or not lifestyle_text.strip():
+    if not acknowledgement:
+        st.error("Please confirm the informational acknowledgement checkbox before calculating your risk assessment.")
+    elif not lifestyle_text or not lifestyle_text.strip():
         st.warning("Lifestyle description is required for multimodal assessment. Please enter lifestyle details above.")
     else:
+        # Rate limit check (Phase 15)
+        allowed, err_msg = check_rate_limit("assessment_create", str(current_user["id"]))
+        if not allowed:
+            st.error(err_msg)
+            st.stop()
+
         # Validate lifestyle text length (security check) — text is NOT logged
         try:
             validate_lifestyle_text_length(lifestyle_text)
@@ -253,6 +268,19 @@ if assess_clicked:
                     multimodal_result=assessment,
                     alert_status=alert_status,
                     assessment_id=assessment_id,
+                )
+
+                # Log assessment creation in audit log (Phase 15)
+                log_event(
+                    event_type="assessment_created",
+                    status="SUCCESS",
+                    user_id=current_user["id"],
+                    role=current_user.get("role", "PATIENT"),
+                    detail=f"Created assessment {assessment_id}",
+                    resource_type="assessment",
+                    resource_id=assessment_id,
+                    category="DATA_ACCESS",
+                    severity="INFO",
                 )
 
                 # Store in session state tagged with user_id for isolation

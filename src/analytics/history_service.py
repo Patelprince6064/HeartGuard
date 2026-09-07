@@ -52,10 +52,12 @@ def _row_to_assessment(row: sqlite3.Row) -> Assessment:
 class HistoryService:
     """Service providing secure, user-isolated patient assessment history."""
 
+    init_db = staticmethod(init_assessment_db)
+
     @staticmethod
     def save_assessment(
-        user_id: int,
-        multimodal_result: dict[str, Any],
+        user_id: int | Assessment,
+        multimodal_result: dict[str, Any] | None = None,
         alert_status: str = "NOT_TRIGGERED",
         assessment_id: str | None = None,
         db_path: Path | None = None,
@@ -63,7 +65,7 @@ class HistoryService:
         """Persist a completed multimodal risk assessment.
 
         Args:
-            user_id: Authenticated user ID.
+            user_id: Authenticated user ID or an Assessment instance.
             multimodal_result: Dictionary returned from MultimodalRiskEngine.assess().
             alert_status: Alert delivery status ('NOT_TRIGGERED', 'DISABLED', 'SUCCESS', etc.).
             assessment_id: Optional unique assessment ID (generates 8-char hex if omitted).
@@ -72,6 +74,45 @@ class HistoryService:
         Returns:
             Assessment: Persisted domain model instance.
         """
+        if isinstance(user_id, Assessment):
+            asmt = user_id
+            target_db = db_path
+            if target_db is None and isinstance(multimodal_result, (Path, str)):
+                target_db = Path(multimodal_result)
+            sql = """
+            INSERT INTO assessments (
+                assessment_id, user_id, created_at, clinical_risk, lifestyle_risk,
+                overall_risk, risk_category, recommendation, model_version,
+                narrative_summary, alert_status, top_clinical_factors_json,
+                lifestyle_factors_json, clinical_data_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """
+            with _get_connection(target_db) as conn:
+                cursor = conn.execute(
+                    sql,
+                    (
+                        asmt.assessment_id,
+                        asmt.user_id,
+                        asmt.created_at,
+                        asmt.clinical_risk,
+                        asmt.lifestyle_risk,
+                        asmt.overall_risk,
+                        asmt.risk_category,
+                        asmt.recommendation,
+                        asmt.model_version,
+                        asmt.narrative_summary,
+                        asmt.alert_status,
+                        asmt.top_clinical_factors_json,
+                        asmt.lifestyle_factors_json,
+                        asmt.clinical_data_json,
+                    ),
+                )
+                conn.commit()
+                asmt.id = cursor.lastrowid
+            logger.info("Assessment record persisted: aid=%s user_id=%s", asmt.assessment_id, asmt.user_id)
+            return asmt
+
+        multimodal_result = multimodal_result or {}
         aid = assessment_id or uuid.uuid4().hex[:8]
         now_iso = datetime.now(timezone.utc).isoformat()
 

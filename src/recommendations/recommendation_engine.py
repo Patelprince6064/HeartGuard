@@ -111,7 +111,10 @@ class RecommendationEngine:
                 continue
 
             try:
-                validate_recommendation(m)
+                is_valid, reason = validate_recommendation(m)
+                if not is_valid:
+                    logger.warning("Rejected unsafe recommendation '%s': %s", rule_id, reason)
+                    continue
             except Exception as exc:
                 logger.warning("Rejected unsafe recommendation '%s': %s", rule_id, exc)
                 continue
@@ -139,11 +142,28 @@ class RecommendationEngine:
         valid_recs.sort(key=lambda r: PRIORITY_ORDER.get(r.priority, 99))
 
         # 4. Generate summary text
+        FRIENDLY_NAMES = {
+            "trestbps": "Resting Blood Pressure",
+            "chol": "Serum Cholesterol",
+            "thalach": "Max Heart Rate",
+            "fbs": "Fasting Blood Sugar",
+            "cp": "Chest Pain Type",
+            "oldpeak": "ST Depression (Oldpeak)",
+            "age": "Age",
+            "sex": "Sex",
+            "ca": "Major Vessels (Fluoroscopy)",
+            "thal": "Thalassemia Indicator",
+            "exang": "Exercise-Induced Angina",
+            "restecg": "Resting ECG",
+            "slope": "ST Slope",
+        }
+
         top_factor_names = []
         for tf in top_shap[:3]:
-            label = tf.get("clinical_label") or tf.get("feature", "")
+            raw_feat = str(tf.get("feature", "")).lower()
+            label = tf.get("clinical_label") or FRIENDLY_NAMES.get(raw_feat) or raw_feat.replace("_", " ").title()
             if label:
-                top_factor_names.append(label.replace("_", " ").title())
+                top_factor_names.append(label)
 
         summary_parts = [
             f"Your latest HeartGuard assessment indicates a model-based risk score of "
@@ -158,7 +178,7 @@ class RecommendationEngine:
 
         # 5. Format comparison summary
         if comparison:
-            comp_summary = comparison["interpretation"]
+            comp_summary = comparison.get("interpretation") or comparison.get("summary")
         elif previous_assessment is None:
             comp_summary = "This is your first HeartGuard assessment, so there is no previous assessment available for comparison."
         else:
@@ -167,15 +187,16 @@ class RecommendationEngine:
         # 6. Format top factors with clear lay explanations
         top_factors_formatted: list[dict[str, Any]] = []
         for tf in top_shap[:5]:
-            feat = tf.get("clinical_label") or tf.get("feature", "Clinical Feature")
-            val = tf.get("shap_value", 0.0)
-            clean_name = feat.replace("_", " ").title()
+            raw_feat = str(tf.get("feature", "Clinical Feature")).lower()
+            clean_name = tf.get("clinical_label") or FRIENDLY_NAMES.get(raw_feat) or raw_feat.replace("_", " ").title()
+            val = tf.get("shap_value", tf.get("importance", 0.0))
             direction = "positive contributor (increased model risk)" if val >= 0 else "protective factor (reduced model risk)"
             top_factors_formatted.append(
                 {
                     "feature": clean_name,
                     "shap_value": val,
                     "direction": direction,
+                    "description": f"{clean_name} contributed to this model-based assessment score based on statistical feature importance.",
                     "explanation": f"{clean_name} was one of the stronger {direction}s for this model output.",
                 }
             )
@@ -188,4 +209,5 @@ class RecommendationEngine:
             recommendations=valid_recs,
             disclaimer=RECOMMENDATION_DISCLAIMER,
             version=RECOMMENDATION_ENGINE_VERSION,
+            comparison=comparison,
         )

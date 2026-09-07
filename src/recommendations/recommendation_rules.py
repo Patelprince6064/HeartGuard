@@ -34,7 +34,7 @@ def rule_smoking(factors: list[dict[str, Any]], clinical: dict[str, Any]) -> Rul
                 "category": "Smoking",
                 "title": "Consider exploring smoking cessation support",
                 "description": (
-                    "Tobacco use was identified as an elevated lifestyle risk factor in your "
+                    "Smoking and tobacco use was identified as an elevated lifestyle risk factor in your "
                     "assessment. Consider speaking with a healthcare professional about evidence-based "
                     "cessation strategies and community health resources."
                 ),
@@ -169,7 +169,7 @@ def rule_cholesterol(
     chol = clinical.get("chol")
     has_shap_chol = any("chol" in str(s.get("feature", "")).lower() or "cholesterol" in str(s.get("clinical_label", "")).lower() for s in top_shap[:3])
 
-    if (chol is not None and float(chol) >= 200) or has_shap_chol:
+    if (chol is not None and float(chol) >= 240) or has_shap_chol:
         source = "SHAP" if has_shap_chol else "Clinical Data"
         return {
             "rule_id": "CLINICAL_CHOL_CHECK",
@@ -215,7 +215,7 @@ def rule_risk_category(category: str, overall_risk: float) -> RuleMatch:
             "title": "Promptly consult a qualified healthcare professional",
             "description": (
                 "Your HeartGuard model-based assessment is in the critical risk category. "
-                "Consider sharing this assessment summary with a qualified clinician promptly. "
+                "Consider sharing this assessment summary with a qualified healthcare professional promptly. "
                 "If you or anyone experiences urgent symptoms (e.g. chest discomfort, shortness of breath), "
                 "seek emergency medical attention immediately."
             ),
@@ -243,7 +243,7 @@ def rule_risk_category(category: str, overall_risk: float) -> RuleMatch:
                 "Your assessment falls within the lower baseline risk tier. "
                 "Continue maintaining balanced daily physical activity, nutritious eating, and regular routine wellness visits."
             ),
-            "priority": PRIORITY_INFO,
+            "priority": PRIORITY_LOW,
             "source": "Risk Category",
         }
 
@@ -269,9 +269,9 @@ def rule_trend_comparison(comparison: dict[str, Any] | None) -> RuleMatch | None
             "priority": PRIORITY_MEDIUM,
             "source": "Assessment Trend",
         }
-    elif direction == "DECREASED" or delta < -2.0:
+    elif direction in ("DECREASED", "DECREASING") or delta < -2.0:
         return {
-            "rule_id": "TREND_DECREASED_REINFORCE",
+            "rule_id": "TREND_DECREASING_REINFORCE",
             "category": "Assessment Monitoring",
             "title": "Continue maintaining positive habit adjustments",
             "description": (
@@ -283,3 +283,123 @@ def rule_trend_comparison(comparison: dict[str, Any] | None) -> RuleMatch | None
             "source": "Assessment Trend",
         }
     return None
+
+
+rule_risk_tier = rule_risk_category
+
+
+def evaluate_lifestyle_rules(
+    assessment_id: str,
+    lifestyle_factors: list[dict[str, Any]],
+) -> list[Any]:
+    """Evaluate lifestyle rules against patient lifestyle factors."""
+    from src.recommendations.recommendation_models import Recommendation
+    recs: list[Recommendation] = []
+    clinical: dict[str, Any] = {}
+    lifestyle_rules = [
+        rule_smoking,
+        rule_physical_inactivity,
+        rule_unhealthy_diet,
+        rule_poor_sleep,
+        rule_alcohol_use,
+        rule_family_history,
+    ]
+    for r in lifestyle_rules:
+        match = r(lifestyle_factors, clinical)
+        if match:
+            recs.append(
+                Recommendation(
+                    assessment_id=assessment_id,
+                    category=match["category"],
+                    title=match["title"],
+                    description=match["description"],
+                    priority=match["priority"],
+                    source=match["source"],
+                    rule_id=match["rule_id"],
+                )
+            )
+    return recs
+
+
+def evaluate_clinical_rules(
+    assessment_id: str,
+    clinical_data: dict[str, Any],
+) -> list[Any]:
+    """Evaluate clinical rules against clinical measurements."""
+    from src.recommendations.recommendation_models import Recommendation
+    recs: list[Recommendation] = []
+    factors: list[dict[str, Any]] = []
+    clinical_rules = [
+        rule_blood_pressure,
+        rule_fasting_blood_sugar,
+        rule_cholesterol,
+    ]
+    for r in clinical_rules:
+        match = r(factors, clinical_data, [])
+        if match:
+            recs.append(
+                Recommendation(
+                    assessment_id=assessment_id,
+                    category=match["category"],
+                    title=match["title"],
+                    description=match["description"],
+                    priority=match["priority"],
+                    source=match["source"],
+                    rule_id=match["rule_id"],
+                )
+            )
+    return recs
+
+
+def evaluate_risk_tier_rules(
+    assessment_id: str,
+    risk_category: str,
+    overall_risk: float,
+) -> list[Any]:
+    """Evaluate risk tier rules."""
+    from src.recommendations.recommendation_models import Recommendation
+    match = rule_risk_tier(risk_category, overall_risk)
+    if match:
+        return [
+            Recommendation(
+                assessment_id=assessment_id,
+                category=match["category"],
+                title=match["title"],
+                description=match["description"],
+                priority=match["priority"],
+                source=match["source"],
+                rule_id=match["rule_id"],
+            )
+        ]
+    return []
+
+
+def evaluate_trend_rules(
+    assessment_id: str,
+    trend_direction: str,
+    delta: float,
+) -> list[Any]:
+    """Evaluate trend rules."""
+    from src.recommendations.recommendation_models import Recommendation
+    comparison = {
+        "trend_direction": trend_direction,
+        "overall_risk": {
+            "delta": delta,
+            "delta_str": f"{abs(delta):.1f}%",
+        },
+    }
+    match = rule_trend_comparison(comparison)
+    if match:
+        return [
+            Recommendation(
+                assessment_id=assessment_id,
+                category=match["category"],
+                title=match["title"],
+                description=match["description"],
+                priority=match["priority"],
+                source=match["source"],
+                rule_id=match["rule_id"],
+            )
+        ]
+    return []
+

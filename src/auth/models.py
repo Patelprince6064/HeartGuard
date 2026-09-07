@@ -44,6 +44,14 @@ class User:
     created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
+    @property
+    def user_id(self) -> Optional[int]:
+        return self.id
+
+    @property
+    def username(self) -> str:
+        return self.email
+
     def to_safe_dict(self) -> dict:
         """Return a safe representation — omits password_hash.
 
@@ -77,13 +85,14 @@ CREATE TABLE IF NOT EXISTS users (
 """
 
 
-def init_auth_db(db_path: Path = AUTH_DB_PATH) -> None:
+def init_auth_db(db_path: Path | str = AUTH_DB_PATH) -> None:
     """Initialise the authentication database and create tables if needed.
 
     Args:
         db_path: Path to the SQLite database file. Created automatically.
     """
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(str(db_path)) as conn:
+    target = Path(db_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(str(target)) as conn:
         conn.execute(_CREATE_USERS_SQL)
         conn.commit()

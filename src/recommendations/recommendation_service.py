@@ -26,8 +26,8 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def _get_connection(db_path: Optional[Path] = None) -> sqlite3.Connection:
-    target = db_path or RECOMMENDATIONS_DB_PATH
+def _get_connection(db_path: Optional[Path | str] = None) -> sqlite3.Connection:
+    target = Path(db_path) if db_path is not None else RECOMMENDATIONS_DB_PATH
     init_recommendation_db(target)
     conn = sqlite3.connect(str(target), timeout=10.0)
     conn.row_factory = sqlite3.Row
@@ -59,8 +59,11 @@ class RecommendationService:
         assessment_id: str,
         user_id: int,
         is_staff_override: bool = False,
-        assess_db_path: Optional[Path] = None,
-        rec_db_path: Optional[Path] = None,
+        user_role: Optional[str] = None,
+        assess_db_path: Optional[Path | str] = None,
+        assessment_db_path: Optional[Path | str] = None,
+        rec_db_path: Optional[Path | str] = None,
+        db_path: Optional[Path | str] = None,
     ) -> AssessmentInsights:
         """Fetch or generate AI insights and recommendations for an assessment.
 
@@ -70,8 +73,11 @@ class RecommendationService:
             assessment_id: Target assessment ID.
             user_id: Authenticated requesting user ID.
             is_staff_override: Set to True for authorized REVIEWER or ADMIN.
+            user_role: Optional role string (e.g. 'reviewer', 'admin').
             assess_db_path: Assessments DB path override for tests.
+            assessment_db_path: Assessments DB path alias for tests.
             rec_db_path: Recommendations DB path override for tests.
+            db_path: Recommendations DB path alias for tests.
 
         Returns:
             AssessmentInsights
@@ -80,7 +86,12 @@ class RecommendationService:
             ValueError: If assessment not found.
             PermissionError: If user does not own the assessment (IDOR protection).
         """
-        assessment = HistoryService.get_assessment_by_id(assessment_id, db_path=assess_db_path)
+        effective_assess_db = assess_db_path or assessment_db_path
+        effective_rec_db = rec_db_path or db_path
+        if user_role and user_role.lower() in ("admin", "reviewer"):
+            is_staff_override = True
+
+        assessment = HistoryService.get_assessment_by_id(assessment_id, db_path=effective_assess_db)
         if assessment is None:
             raise ValueError(f"Assessment '{assessment_id}' not found.")
 
@@ -91,7 +102,7 @@ class RecommendationService:
 
         # Retrieve prior assessment for trend comparison if available
         user_assessments = HistoryService.get_user_assessments(
-            user_id=assessment.user_id, sort_order="desc", limit=10, db_path=assess_db_path
+            user_id=assessment.user_id, sort_order="desc", limit=10, db_path=effective_assess_db
         )
         previous_assessment = None
         for idx, a in enumerate(user_assessments):
@@ -106,22 +117,34 @@ class RecommendationService:
 
         # Persist generated recommendations if not already in recommendations.db
         RecommendationService._persist_recommendations_if_absent(
-            insights.recommendations, rec_db_path=rec_db_path
+            insights.recommendations, rec_db_path=effective_rec_db
         )
 
         return insights
 
     @staticmethod
     def _persist_recommendations_if_absent(
-        recommendations: list[Recommendation],
-        rec_db_path: Optional[Path] = None,
+        arg1: Any,
+        arg2: Any = None,
+        rec_db_path: Optional[Path | str] = None,
+        db_path: Optional[Path | str] = None,
     ) -> None:
         """Insert recommendations into the database if not already stored."""
+        if isinstance(arg1, list):
+            recommendations = arg1
+            aid = recommendations[0].assessment_id if recommendations else ""
+        else:
+            aid = str(arg1)
+            recommendations = arg2 or []
+
+        target_db = db_path or rec_db_path
         if not recommendations:
             return
 
-        aid = recommendations[0].assessment_id
-        with _get_connection(rec_db_path) as conn:
+        if not aid and recommendations:
+            aid = recommendations[0].assessment_id
+
+        with _get_connection(target_db) as conn:
             existing = conn.execute(
                 "SELECT 1 FROM recommendations WHERE assessment_id = ? LIMIT 1;", (aid,)
             ).fetchone()
@@ -157,10 +180,12 @@ class RecommendationService:
     def get_user_recommendations(
         user_id: int,
         limit: int = 50,
-        rec_db_path: Optional[Path] = None,
+        rec_db_path: Optional[Path | str] = None,
+        db_path: Optional[Path | str] = None,
     ) -> list[Recommendation]:
         """Fetch past recommendations for an authenticated user, newest first."""
-        with _get_connection(rec_db_path) as conn:
+        target_db = db_path or rec_db_path
+        with _get_connection(target_db) as conn:
             rows = conn.execute(
                 """
                 SELECT * FROM recommendations

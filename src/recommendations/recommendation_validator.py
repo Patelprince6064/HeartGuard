@@ -43,7 +43,9 @@ MEDICATION_TERMS = [
     r"\bwarfarin\b",
     r"\bclopidogrel\b",
     r"\bmetformin\b",
+    r"\bhydrochlorothiazide\b",
     r"\bprescription\b",
+    r"\bprescribe\b",
     r"\bdosage\b",
     r"\b\d+\s*mg\b",
     r"\btablet\b",
@@ -52,41 +54,85 @@ MEDICATION_TERMS = [
     r"\btake daily\b",
 ]
 
+PRESCRIPTION_TERMS = MEDICATION_TERMS
+
+# Unsupported claims and imperative guarantees
+UNSUPPORTED_CLAIMS = [
+    r"\bwill cure\b",
+    r"\bwill prevent all\b",
+    r"\bguaranteed cure\b",
+    r"\bstop everything immediately\b",
+]
+
 
 class SafetyValidationError(ValueError):
     """Raised when a recommendation violates safety or non-diagnostic policies."""
 
 
-def validate_recommendation(recommendation: dict[str, Any]) -> None:
+def validate_recommendation(
+    recommendation: Any,
+    raise_on_error: bool = False,
+) -> tuple[bool, str]:
     """Validate that a recommendation strictly complies with medical safety standards.
 
-    Raises:
-        SafetyValidationError: If diagnostic assertions, medications, or unsafe claims exist.
+    Args:
+        recommendation: Dict or Recommendation object to validate.
+        raise_on_error: If True, raises SafetyValidationError instead of returning False.
+
+    Returns:
+        tuple[bool, str]: (is_valid, failure_reason)
     """
-    title = str(recommendation.get("title", ""))
-    desc = str(recommendation.get("description", ""))
-    priority = str(recommendation.get("priority", ""))
-    category = str(recommendation.get("category", ""))
+    if isinstance(recommendation, dict):
+        title = str(recommendation.get("title", ""))
+        desc = str(recommendation.get("description", ""))
+        priority = str(recommendation.get("priority", ""))
+    else:
+        title = str(getattr(recommendation, "title", ""))
+        desc = str(getattr(recommendation, "description", ""))
+        priority = str(getattr(recommendation, "priority", ""))
 
     if not title.strip():
-        raise SafetyValidationError("Recommendation title cannot be empty.")
+        reason = "Recommendation title cannot be empty."
+        if raise_on_error:
+            raise SafetyValidationError(reason)
+        return False, reason
+
     if not desc.strip():
-        raise SafetyValidationError("Recommendation description cannot be empty.")
-    if priority not in PRIORITIES:
-        raise SafetyValidationError(f"Invalid priority '{priority}'. Must be one of {PRIORITIES}.")
+        reason = "Recommendation description cannot be empty."
+        if raise_on_error:
+            raise SafetyValidationError(reason)
+        return False, reason
+
+    if priority and priority not in PRIORITIES:
+        reason = f"Invalid priority '{priority}'. Must be one of {PRIORITIES}."
+        if raise_on_error:
+            raise SafetyValidationError(reason)
+        return False, reason
 
     full_text = f"{title} {desc}".lower()
 
     # 1. Check for diagnostic claims
     for pattern in DIAGNOSTIC_TERMS:
         if re.search(pattern, full_text, re.IGNORECASE):
-            raise SafetyValidationError(
-                f"Recommendation contains prohibited diagnostic language matching '{pattern}'."
-            )
+            reason = f"Prohibited diagnostic claim detected matching '{pattern}'."
+            if raise_on_error:
+                raise SafetyValidationError(reason)
+            return False, reason
 
     # 2. Check for pharmaceutical / prescription terms
     for pattern in MEDICATION_TERMS:
         if re.search(pattern, full_text, re.IGNORECASE):
-            raise SafetyValidationError(
-                f"Recommendation contains prohibited pharmaceutical/dosage language matching '{pattern}'."
-            )
+            reason = f"Prohibited medication or prescription terms detected matching '{pattern}'."
+            if raise_on_error:
+                raise SafetyValidationError(reason)
+            return False, reason
+
+    # 3. Check for imperative / unsupported claims
+    for pattern in UNSUPPORTED_CLAIMS:
+        if re.search(pattern, full_text, re.IGNORECASE):
+            reason = f"Prohibited absolute or imperative claim detected matching '{pattern}'."
+            if raise_on_error:
+                raise SafetyValidationError(reason)
+            return False, reason
+
+    return True, ""

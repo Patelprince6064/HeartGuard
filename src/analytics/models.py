@@ -47,7 +47,6 @@ _CREATE_INDEXES_SQL = [
 class Assessment:
     """Represents a single completed HeartGuard multimodal assessment."""
 
-    id: int | None
     assessment_id: str
     user_id: int
     created_at: str
@@ -62,6 +61,7 @@ class Assessment:
     top_clinical_factors_json: str | None = None
     lifestyle_factors_json: str | None = None
     clinical_data_json: str | None = None
+    id: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize assessment record to dictionary."""
@@ -120,7 +120,7 @@ def init_assessment_db(db_path: Path | None = None) -> None:
     Args:
         db_path: Optional path override (used for test isolation).
     """
-    target = db_path if db_path is not None else ASSESSMENTS_DB_PATH
+    target = Path(db_path) if db_path is not None else ASSESSMENTS_DB_PATH
     target.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(str(target), timeout=10.0) as conn:
         conn.execute(_CREATE_ASSESSMENTS_TABLE_SQL)
