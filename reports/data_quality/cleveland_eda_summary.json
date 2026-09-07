@@ -1,0 +1,130 @@
+{
+  "dataset": "Cleveland",
+  "shape": {
+    "rows": 100,
+    "columns": 12
+  },
+  "target_distribution": {
+    "0": 45,
+    "1": 55
+  },
+  "missing_values": {},
+  "duplicates": {
+    "total_rows": 100,
+    "duplicate_rows": 0,
+    "duplicate_percentage": 0.0
+  },
+  "numerical_summary": {
+    "age": {
+      "mean": 54.07,
+      "std": 14.4476,
+      "min": 30.0,
+      "25%": 43.0,
+      "50%": 53.0,
+      "75%": 68.0,
+      "max": 79.0
+    },
+    "resting_bp": {
+      "mean": 141.09,
+      "std": 32.602,
+      "min": 90.0,
+      "25%": 112.75,
+      "50%": 137.0,
+      "75%": 171.0,
+      "max": 199.0
+    },
+    "cholesterol": {
+      "mean": 271.21,
+      "std": 73.6975,
+      "min": 153.0,
+      "25%": 202.0,
+      "50%": 269.5,
+      "75%": 331.75,
+      "max": 399.0
+    },
+    "max_heart_rate": {
+      "mean": 148.46,
+      "std": 30.2152,
+      "min": 103.0,
+      "25%": 121.5,
+      "50%": 146.5,
+      "75%": 175.0,
+      "max": 199.0
+    },
+    "st_depression": {
+      "mean": 3.257,
+      "std": 1.7841,
+      "min": 0.1,
+      "25%": 1.825,
+      "50%": 3.3,
+      "75%": 4.9,
+      "max": 6.0
+    },
+    "num_major_vessels": {
+      "mean": 1.33,
+      "std": 1.0546,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 1.0,
+      "75%": 2.0,
+      "max": 3.0
+    }
+  },
+  "categorical_summary": {
+    "sex": {
+      "unique": 2,
+      "value_counts": {
+        "0": 57,
+        "1": 43
+      }
+    },
+    "chest_pain_type": {
+      "unique": 4,
+      "value_counts": {
+        "0": 27,
+        "1": 23,
+        "2": 23,
+        "3": 27
+      }
+    },
+    "fasting_blood_sugar": {
+      "unique": 2,
+      "value_counts": {
+        "0": 48,
+        "1": 52
+      }
+    },
+    "resting_ecg": {
+      "unique": 2,
+      "value_counts": {
+        "0": 45,
+        "1": 55
+      }
+    },
+    "exercise_angina": {
+      "unique": 2,
+      "value_counts": {
+        "0": 47,
+        "1": 53
+      }
+    }
+  },
+  "outliers": {},
+  "correlations": {
+    "age__resting_bp": 0.1114,
+    "age__cholesterol": 0.1012,
+    "age__max_heart_rate": -0.032,
+    "age__st_depression": 0.1158,
+    "age__num_major_vessels": 0.0674,
+    "resting_bp__cholesterol": -0.0802,
+    "resting_bp__max_heart_rate": -0.0502,
+    "resting_bp__st_depression": 0.0218,
+    "resting_bp__num_major_vessels": -0.037,
+    "cholesterol__max_heart_rate": 0.0911,
+    "cholesterol__st_depression": 0.034,
+    "cholesterol__num_major_vessels": -0.003,
+    "max_heart_rate__st_depression": -0.1088,
+    "max_heart_rate__num_major_vessels": 0.0465,
+    "st_depression__num_major_vessels": 0.0377
+  }
+}

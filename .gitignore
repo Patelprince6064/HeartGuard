@@ -1,0 +1,50 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Generated data and models
+models/*
+data/processed/*
+data/alerts/*
+reports/generated/*
+
+# Keep directory structure
+!models/.gitkeep
+!data/processed/.gitkeep
+!data/alerts/.gitkeep
+!reports/generated/.gitkeep
+
+# pytest
+.pytest_cache/
+
+# OS files
+.DS_Store
+Thumbs.db

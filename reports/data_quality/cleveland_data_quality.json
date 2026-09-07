@@ -1,0 +1,168 @@
+{
+  "dataset_name": "Cleveland Heart Disease",
+  "rows": 100,
+  "columns": 12,
+  "column_names": [
+    "age",
+    "sex",
+    "chest_pain_type",
+    "resting_bp",
+    "cholesterol",
+    "fasting_blood_sugar",
+    "resting_ecg",
+    "max_heart_rate",
+    "exercise_angina",
+    "st_depression",
+    "num_major_vessels",
+    "target"
+  ],
+  "data_types": {
+    "age": "int64",
+    "sex": "int64",
+    "chest_pain_type": "int64",
+    "resting_bp": "int64",
+    "cholesterol": "int64",
+    "fasting_blood_sugar": "int64",
+    "resting_ecg": "int64",
+    "max_heart_rate": "int64",
+    "exercise_angina": "int64",
+    "st_depression": "float64",
+    "num_major_vessels": "int64",
+    "target": "int64"
+  },
+  "missing_values": {},
+  "total_missing": 0,
+  "duplicates": {
+    "total_rows": 100,
+    "duplicate_rows": 0,
+    "duplicate_percentage": 0.0
+  },
+  "target_distribution": {
+    "0": 45,
+    "1": 55
+  },
+  "invalid_values": {},
+  "outliers": {},
+  "column_summary": {
+    "age": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 46,
+      "mean": 54.07,
+      "std": 14.4476,
+      "min": 30.0,
+      "max": 79.0,
+      "median": 53.0
+    },
+    "sex": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 2,
+      "mean": 0.43,
+      "std": 0.4976,
+      "min": 0.0,
+      "max": 1.0,
+      "median": 0.0
+    },
+    "chest_pain_type": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 4,
+      "mean": 1.5,
+      "std": 1.1591,
+      "min": 0.0,
+      "max": 3.0,
+      "median": 1.5
+    },
+    "resting_bp": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 67,
+      "mean": 141.09,
+      "std": 32.602,
+      "min": 90.0,
+      "max": 199.0,
+      "median": 137.0
+    },
+    "cholesterol": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 87,
+      "mean": 271.21,
+      "std": 73.6975,
+      "min": 153.0,
+      "max": 399.0,
+      "median": 269.5
+    },
+    "fasting_blood_sugar": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 2,
+      "mean": 0.52,
+      "std": 0.5021,
+      "min": 0.0,
+      "max": 1.0,
+      "median": 1.0
+    },
+    "resting_ecg": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 2,
+      "mean": 0.55,
+      "std": 0.5,
+      "min": 0.0,
+      "max": 1.0,
+      "median": 1.0
+    },
+    "max_heart_rate": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 62,
+      "mean": 148.46,
+      "std": 30.2152,
+      "min": 103.0,
+      "max": 199.0,
+      "median": 146.5
+    },
+    "exercise_angina": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 2,
+      "mean": 0.53,
+      "std": 0.5016,
+      "min": 0.0,
+      "max": 1.0,
+      "median": 1.0
+    },
+    "st_depression": {
+      "dtype": "float64",
+      "missing": 0,
+      "unique": 50,
+      "mean": 3.257,
+      "std": 1.7841,
+      "min": 0.1,
+      "max": 6.0,
+      "median": 3.3
+    },
+    "num_major_vessels": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 4,
+      "mean": 1.33,
+      "std": 1.0546,
+      "min": 0.0,
+      "max": 3.0,
+      "median": 1.0
+    },
+    "target": {
+      "dtype": "int64",
+      "missing": 0,
+      "unique": 2,
+      "mean": 0.55,
+      "std": 0.5,
+      "min": 0.0,
+      "max": 1.0,
+      "median": 1.0
+    }
+  }
+}

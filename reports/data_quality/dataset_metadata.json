@@ -1,0 +1,89 @@
+{
+  "dataset": "Cleveland Heart Disease",
+  "pipeline_timestamp": "2026-09-07T18:42:42.060374+00:00",
+  "pipeline_elapsed_seconds": 0.027,
+  "random_state": 42,
+  "test_size": 0.2,
+  "preprocessing_strategy": {
+    "numerical_imputation": "median",
+    "numerical_scaling": "MinMaxScaler",
+    "categorical_imputation": "most_frequent",
+    "categorical_encoding": "OneHotEncoder(handle_unknown='ignore')"
+  },
+  "raw_shape": {
+    "rows": 100,
+    "columns": 12
+  },
+  "cleaned_shape": {
+    "rows": 100,
+    "columns": 2
+  },
+  "train_rows": 80,
+  "test_rows": 20,
+  "target_distribution": {
+    "0": 45,
+    "1": 55
+  },
+  "class_analysis": {
+    "class_counts": {
+      "0": 45,
+      "1": 55
+    },
+    "class_percentages": {
+      "0": 45.0,
+      "1": 55.0
+    },
+    "total": 100,
+    "imbalance_ratio": 1.22
+  },
+  "missing_values": {},
+  "duplicates": {
+    "total_rows": 100,
+    "duplicate_rows": 0,
+    "duplicate_percentage": 0.0
+  },
+  "invalid_values": {},
+  "outliers": {},
+  "leakage_check": {
+    "train_test_split_before_preprocessing": true,
+    "imputer_fit_on_train_only": true,
+    "scaler_fit_on_train_only": true,
+    "encoder_fit_on_train_only": true,
+    "target_excluded_from_features": true
+  },
+  "feature_names": [
+    "age",
+    "resting_bp",
+    "cholesterol",
+    "max_heart_rate",
+    "st_depression",
+    "num_major_vessels",
+    "sex_0",
+    "sex_1",
+    "chest_pain_type_0",
+    "chest_pain_type_1",
+    "chest_pain_type_2",
+    "chest_pain_type_3",
+    "fasting_blood_sugar_0",
+    "fasting_blood_sugar_1",
+    "resting_ecg_0",
+    "resting_ecg_1",
+    "exercise_angina_0",
+    "exercise_angina_1"
+  ],
+  "numerical_features": [
+    "age",
+    "resting_bp",
+    "cholesterol",
+    "max_heart_rate",
+    "st_depression",
+    "num_major_vessels"
+  ],
+  "categorical_features": [
+    "sex",
+    "chest_pain_type",
+    "fasting_blood_sugar",
+    "resting_ecg",
+    "exercise_angina"
+  ]
+}
