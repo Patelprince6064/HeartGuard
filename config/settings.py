@@ -62,6 +62,17 @@ RECOMMENDATIONS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "recommendations.db"
 RECOMMENDATION_ENGINE_VERSION = "1.0.0"
 
 # ---------------------------------------------------------------------------
+# Evaluation configuration (Phase 14)
+# ---------------------------------------------------------------------------
+EVALUATION_DATA_DIRECTORY = DATA_DIRECTORY / "evaluations"
+EVALUATION_DB_PATH = EVALUATION_DATA_DIRECTORY / "evaluation.db"
+EVALUATION_ARTIFACTS_DIR = BASE_DIR / "artifacts" / "evaluation"
+EVALUATION_RANDOM_STATE: int = 42
+EVALUATION_TEST_SIZE: float = 0.20
+EVALUATION_CV_FOLDS: int = 5
+EVALUATION_ENGINE_VERSION: str = "1.0.0"
+
+# ---------------------------------------------------------------------------
 # Ensure directories exist
 # ---------------------------------------------------------------------------
 MODEL_DIRECTORY.mkdir(exist_ok=True)
@@ -71,6 +82,8 @@ AUTH_DATA_DIRECTORY.mkdir(exist_ok=True)
 SECURITY_DATA_DIRECTORY.mkdir(exist_ok=True)
 ASSESSMENT_DATA_DIRECTORY.mkdir(exist_ok=True)
 REPORT_DIRECTORY.mkdir(exist_ok=True)
+EVALUATION_DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+EVALUATION_ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Twilio / Alert configuration (Phase 8)
