@@ -57,6 +57,7 @@ AUTH_DB_PATH = AUTH_DATA_DIRECTORY / "heartguard_auth.db"
 AUDIT_DB_PATH = SECURITY_DATA_DIRECTORY / "audit.db"
 ALERTS_DB_PATH = ALERT_DIRECTORY / "alerts.db"
 ASSESSMENTS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "assessments.db"
+REVIEWS_DB_PATH = ASSESSMENT_DATA_DIRECTORY / "reviews.db"
 
 # ---------------------------------------------------------------------------
 # Ensure directories exist
@@ -105,8 +106,9 @@ LOGIN_MAX_ATTEMPTS: int = 5            # Per session
 LOGIN_COOLDOWN_SECONDS: int = 60       # Cooldown period after max attempts
 
 # ---------------------------------------------------------------------------
-# User roles (Phase 9)
+# User roles (Phase 9 / Phase 11)
 # ---------------------------------------------------------------------------
 ROLE_PATIENT = "PATIENT"
 ROLE_ADMIN = "ADMIN"
-VALID_ROLES = {ROLE_PATIENT, ROLE_ADMIN}
+ROLE_REVIEWER = "REVIEWER"   # Phase 11 — authorized professional reviewer
+VALID_ROLES = {ROLE_PATIENT, ROLE_ADMIN, ROLE_REVIEWER}

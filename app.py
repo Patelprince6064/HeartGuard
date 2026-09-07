@@ -8,7 +8,7 @@ role-aware home screen with navigation and logout.
 import streamlit as st
 
 from config.settings import DEMO_MODE, PROJECT_NAME, PROJECT_VERSION
-from src.auth.authorization import is_admin
+from src.auth.authorization import is_admin, is_reviewer
 from src.auth.session_manager import (
     clear_session,
     get_current_user,
@@ -120,5 +120,16 @@ if is_admin():
     with a3:
         st.page_link("pages/security.py", label="🔐 Security Status →")
 
+if is_reviewer():
+    st.divider()
+    st.markdown("#### Professional Review Tools")
+    with st.container(border=True):
+        st.markdown("### 🩺 Doctor Review Portal")
+        st.markdown(
+            "Review AI-generated assessments and record professional observations. "
+            "AI risk scores are read-only — this is an observation tool, not a diagnostic system."
+        )
+        st.page_link("pages/review.py", label="Open Doctor Review Portal →")
+
 st.divider()
-st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 10 — History, Analytics & Reports Active")
+st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 11 — Doctor Review Portal Active")

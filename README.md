@@ -536,6 +536,48 @@ pytest tests/test_assessment_history.py tests/test_report_generator.py -v
 
 ---
 
+## Phase 11 — Doctor Review Portal
+
+Phase 11 introduces a secure **Doctor Review Portal** for authorized `REVIEWER`-role
+professionals to inspect AI assessment results and record structured observations.
+
+### Key Features
+
+- **Role-gated access** — `REVIEWER` role enforced server-side via `require_reviewer()`
+- **Read-only AI panel** — risk scores, SHAP factors, narrative summary (never editable)
+- **Professional review form** — status, follow-up flag, urgency flag, free-text notes
+- **Data isolation** — reviews stored in separate `reviews.db` (assessments never modified)
+- **Idempotent creation** — only one review per assessment, prevents duplicate records
+- **Ownership enforcement** — reviewers can only update their own review records
+
+### Clinical Safety
+
+> ⚠️ This portal is **NOT** a diagnostic system. Professional notes are observations
+> only — not diagnoses, prescriptions, or treatment plans. AI-generated risk scores
+> cannot be modified through any review action.
+
+### Provisioning a Reviewer Account
+
+```bash
+export REVIEWER_EMAIL=reviewer@heartguard.local
+export REVIEWER_PASSWORD=<strong-password>
+export REVIEWER_NAME="Dr. Jane Smith"
+python scripts/create_reviewer.py
+unset REVIEWER_PASSWORD
+```
+
+### Testing Phase 11
+
+```bash
+# Run Phase 11 tests (43 tests)
+pytest tests/test_review_service.py tests/test_review_authorization.py -v
+
+# Run full regression (310 passing)
+pytest -q --ignore=tests/test_auth.py --ignore=tests/test_authorization.py --ignore=tests/test_security.py
+```
+
+---
+
 ## Medical Disclaimer
 
 HeartGuard is an academic/research prototype and is not a medical diagnostic system.

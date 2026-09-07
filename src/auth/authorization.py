@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from config.settings import ROLE_ADMIN, ROLE_PATIENT
+from config.settings import ROLE_ADMIN, ROLE_PATIENT, ROLE_REVIEWER
 from src.auth.session_manager import get_current_role, is_authenticated
 
 
@@ -75,3 +75,30 @@ def is_patient() -> bool:
     if not is_authenticated():
         return False
     return get_current_role() == ROLE_PATIENT
+
+
+def is_reviewer() -> bool:
+    """Return True if the current authenticated user has the REVIEWER role.
+
+    Returns:
+        bool: True for authorized professional reviewer users.
+    """
+    if not is_authenticated():
+        return False
+    return get_current_role() == ROLE_REVIEWER
+
+
+def require_reviewer() -> None:
+    """Stop page rendering if the current user does not have the REVIEWER role.
+
+    Also enforces authentication (calls require_authentication first).
+    This guard must be called at the top of every reviewer-only page.
+    """
+    require_authentication()
+    current_role = get_current_role()
+    if current_role != ROLE_REVIEWER:
+        st.error(
+            "⛔ This page is restricted to authorized professional reviewers. "
+            "Please contact your system administrator if you require access."
+        )
+        st.stop()

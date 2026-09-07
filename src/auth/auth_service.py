@@ -219,3 +219,48 @@ def create_admin_user(
     )
     logger.info("Admin account created: user_id=%s", user.id)
     return user.to_safe_dict()
+
+
+def create_reviewer_user(
+    name: str,
+    email: str,
+    password: str,
+    db_path: Path = AUTH_DB_PATH,
+) -> dict:
+    """Create a REVIEWER user account (Phase 11).
+
+    This function is called only by scripts/create_reviewer.py, which reads
+    credentials from environment variables. Never called from the UI.
+    REVIEWER accounts may view AI assessments and submit professional
+    observations, but cannot modify AI-generated risk data.
+
+    Args:
+        name: Reviewer display name.
+        email: Reviewer email.
+        password: Plaintext password (hashed immediately).
+        db_path: Override for tests.
+
+    Returns:
+        Safe user dict.
+
+    Raises:
+        ValueError: On validation failure or duplicate email.
+    """
+    _validate_name(name)
+    _validate_email_format(email)
+    _validate_password(password)
+
+    clean_email = _normalise_email(email)
+    pw_hash = hash_password(password)
+
+    init_auth_db(db_path)
+    user = create_user(
+        name=name.strip(),
+        email=clean_email,
+        password_hash=pw_hash,
+        role="REVIEWER",
+        db_path=db_path,
+    )
+    logger.info("Reviewer account created: user_id=%s", user.id)
+    return user.to_safe_dict()
+
