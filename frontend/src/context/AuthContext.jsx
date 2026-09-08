@@ -40,17 +40,38 @@ export function AuthProvider({ children }) {
     const { access_token, user: userData } = res.data
     localStorage.setItem('heartguard_token', access_token)
     setToken(access_token)
-    setUser(userData)
-    return userData
+    let activeUser = userData
+    if (!activeUser) {
+      try {
+        const meRes = await api.auth.getMe()
+        activeUser = meRes.data
+      } catch {
+        activeUser = null
+      }
+    }
+    setUser(activeUser)
+    return activeUser
   }
 
   const register = async (data) => {
     const res = await api.auth.register(data)
     const { access_token, user: userData } = res.data
-    localStorage.setItem('heartguard_token', access_token)
-    setToken(access_token)
-    setUser(userData)
-    return userData
+    if (access_token) {
+      localStorage.setItem('heartguard_token', access_token)
+      setToken(access_token)
+      let activeUser = userData
+      if (!activeUser) {
+        try {
+          const meRes = await api.auth.getMe()
+          activeUser = meRes.data
+        } catch {
+          activeUser = null
+        }
+      }
+      setUser(activeUser)
+      return activeUser
+    }
+    return res.data
   }
 
   const logout = () => {
@@ -64,8 +85,10 @@ export function AuthProvider({ children }) {
 
   const hasRole = (roles) => {
     if (!user) return false
-    if (typeof roles === 'string') return user.role === roles
-    return roles.includes(user.role)
+    const userRole = (user.role || '').toLowerCase()
+    if (typeof roles === 'string') return userRole === roles.toLowerCase()
+    if (Array.isArray(roles)) return roles.map((r) => r.toLowerCase()).includes(userRole)
+    return false
   }
 
   return (

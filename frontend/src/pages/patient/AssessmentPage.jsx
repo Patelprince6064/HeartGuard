@@ -7,6 +7,7 @@ import Select from '../../components/common/Select'
 import Button from '../../components/common/Button'
 import PageHeader from '../../components/common/PageHeader'
 import { User, Stethoscope, Heart, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { formatApiError } from '../../utils/errors'
 
 const steps = [
   { id: 1, title: 'Personal Info', icon: User },
@@ -100,7 +101,7 @@ export default function AssessmentPage() {
       const res = await api.assessments.create(payload)
       navigate('/assessment/result', { state: { assessment: res.data } })
     } catch (err) {
-      setErrors({ submit: err.response?.data?.detail || 'Assessment failed. Please try again.' })
+      setErrors({ submit: formatApiError(err, 'Assessment failed. Please try again.') })
     } finally {
       setLoading(false)
     }

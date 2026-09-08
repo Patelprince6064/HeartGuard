@@ -16,7 +16,10 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('heartguard_token')
-      window.location.href = '/login'
+      const path = window.location.pathname
+      if (!path.startsWith('/login') && !path.startsWith('/register')) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }

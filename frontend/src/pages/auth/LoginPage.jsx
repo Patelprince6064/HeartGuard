@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { Heart, Eye, EyeOff, Loader2 } from 'lucide-react'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
+import { formatApiError } from '../../utils/errors'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,12 +24,13 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
-      const user = await login(email, password)
-      if (user.role === 'admin') navigate('/admin')
-      else if (user.role === 'reviewer') navigate('/reviewer')
+      const user = await login(email.trim(), password)
+      const role = (user?.role || '').toLowerCase()
+      if (role === 'admin') navigate('/admin')
+      else if (role === 'reviewer' || role === 'doctor') navigate('/reviewer')
       else navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid email or password')
+      setError(formatApiError(err, 'Invalid email or password'))
     } finally {
       setLoading(false)
     }

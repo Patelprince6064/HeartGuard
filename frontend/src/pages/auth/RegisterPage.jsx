@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { Heart, Eye, EyeOff } from 'lucide-react'
 import Button from '../../components/common/Button'
 import Input from '../../components/common/Input'
+import { formatApiError } from '../../utils/errors'
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
@@ -18,7 +19,11 @@ export default function RegisterPage() {
     const errs = {}
     if (!form.name.trim()) errs.name = 'Name is required'
     if (!form.email.trim()) errs.email = 'Email is required'
-    if (form.password.length < 8) errs.password = 'Password must be at least 8 characters'
+    if (form.password.length < 8) {
+      errs.password = 'Password must be at least 8 characters'
+    } else if (!/[a-zA-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      errs.password = 'Password must contain at least one letter and one number'
+    }
     if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -30,10 +35,16 @@ export default function RegisterPage() {
     if (!validate()) return
     setLoading(true)
     try {
-      await register({ name: form.name, email: form.email, password: form.password })
+      await register({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        confirm_password: form.confirmPassword,
+        confirmPassword: form.confirmPassword,
+      })
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed')
+      setError(formatApiError(err, 'Registration failed'))
     } finally {
       setLoading(false)
     }

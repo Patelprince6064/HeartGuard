@@ -70,8 +70,9 @@ async def get_current_user(
 
 
 def require_role(*allowed_roles: str):
+    allowed_upper = {r.upper() for r in allowed_roles}
     async def _check(user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-        if user.role not in allowed_roles:
+        if user.role.upper() not in allowed_upper:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Role '{user.role}' is not authorized for this endpoint",
