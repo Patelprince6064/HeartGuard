@@ -188,7 +188,7 @@ def scan_repo_secrets(repo_root: Optional[Path] = None) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
 
     # Files and folders to skip
-    skip_dirs = {".git", ".pytest_cache", "__pycache__", "venv", ".venv", "tests"}
+    skip_dirs = {".git", ".pytest_cache", "__pycache__", "venv", ".venv", "tests", "frontend", "node_modules"}
     skip_exts = {".pyc", ".db", ".png", ".jpg", ".pkl", ".joblib", ".pt", ".onnx"}
     skip_files = {"logger.py"}  # Contains privacy filter keywords, not actual secrets
 

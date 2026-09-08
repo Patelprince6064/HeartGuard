@@ -3,7 +3,7 @@
 # Python 3.12 slim base (Debian bookworm)
 # Application runs as non-root user
 
-# --- Stage 1: Build dependencies ---
+# --- Stage 1: Build Python dependencies ---
 FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /app
@@ -20,12 +20,23 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# --- Stage 2: Production image ---
+# --- Stage 2: Build React frontend ---
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /app/frontend
+
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci --omit=dev 2>/dev/null || npm install --omit=dev
+
+COPY frontend/ ./
+RUN npm run build
+
+# --- Stage 3: Production image ---
 FROM python:3.12-slim-bookworm AS production
 
 LABEL maintainer="HeartGuard Team"
 LABEL description="HeartGuard - Early Heart Disease Risk Prediction with Explainable AI"
-LABEL version="1.0.0"
+LABEL version="2.0.0"
 
 # Security: do not run as root
 RUN groupadd --gid 1000 heartguard && \
@@ -39,11 +50,14 @@ COPY --from=builder /install /usr/local
 # Copy application code
 COPY config/ ./config/
 COPY src/ ./src/
-COPY pages/ ./pages/
+COPY api/ ./api/
 COPY scripts/ ./scripts/
 COPY app.py ./
 COPY conftest.py ./
 COPY pytest.ini ./
+
+# Copy built frontend from frontend-builder
+COPY --from=frontend-builder /app/frontend/dist ./static/
 
 # Copy model artifacts
 COPY models/ ./models/
@@ -72,17 +86,15 @@ ENV ENVIRONMENT=production \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-EXPOSE 8501
+EXPOSE 8000
 
-# Health check using CLI script
+# Health check using the API health endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD ["python", "scripts/health_check.py", "--readiness"]
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/live')"]
 
-# Streamlit production startup
-ENTRYPOINT ["streamlit", "run", "app.py", \
-    "--server.port=8501", \
-    "--server.address=0.0.0.0", \
-    "--server.headless=true", \
-    "--browser.gatherUsageStats=false", \
-    "--server.enableXsrfProtection=true", \
-    "--server.enableCORS=false"]
+# FastAPI production startup
+ENTRYPOINT ["uvicorn", "api.main:app", \
+    "--host", "0.0.0.0", \
+    "--port", "8000", \
+    "--workers", "1", \
+    "--log-level", "warning"]

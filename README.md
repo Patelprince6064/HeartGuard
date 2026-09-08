@@ -36,7 +36,7 @@ HeartGuard is a multimodal heart disease risk prediction platform that combines:
 | Security & Auth | Bcrypt authentication, RBAC, rate limiting, audit logging | 9 |
 | History & Reports | Assessment history, trend analysis, PDF report generation | 10 |
 | Doctor Review | Professional review portal for clinical observation | 11 |
-| Dashboard | Interactive Streamlit dashboard with KPIs and charts | 12 |
+| Dashboard | Interactive dashboard with KPIs and charts | 12 |
 | PDF Reports | Multi-page academic/research prototype PDF reports | 13 |
 | Model Evaluation | Comprehensive ML model evaluation and comparison | 14 |
 | Security Hardening | Enterprise-grade security architecture | 15 |
@@ -44,6 +44,7 @@ HeartGuard is a multimodal heart disease risk prediction platform that combines:
 | Analytics & Monitoring | Drift detection, data quality, anomaly detection, performance monitoring | 17 |
 | UI/UX Polish | Design system, responsive design, accessibility | 18 |
 | Final QA | Complete testing, documentation, demo preparation | 19 |
+| React Frontend | Modern React + Tailwind CSS UI with REST API | 21 |
 
 ---
 
@@ -51,13 +52,18 @@ HeartGuard is a multimodal heart disease risk prediction platform that combines:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Streamlit Frontend                       │
+│                   React Frontend (Vite)                     │
 │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐  │
 │  │Login │ │Dash  │ │Assess│ │Histry│ │Review│ │Admin │  │
 │  └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘  │
 ├─────┼────────┼────────┼────────┼────────┼────────┼────────┤
-│     └────────┴────────┴────────┴────────┴────────┘        │
-│                    Python Backend                          │
+│              REST API Layer (FastAPI)                       │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
+│  │  Auth    │ │Assessment│ │ Dashboard│ │  Reviews │    │
+│  │  API     │ │   API    │ │   API    │ │   API    │    │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘    │
+├─────────────────────────────────────────────────────────────┤
+│                    Python Backend Services                  │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
 │  │  Auth    │ │   ML     │ │  Risk    │ │ SHAP     │    │
 │  │  Module  │ │ Pipeline │ │  Engine  │ │ Explainer│    │
@@ -81,15 +87,16 @@ HeartGuard is a multimodal heart disease risk prediction platform that combines:
 | Component | Technology |
 |-----------|-----------|
 | Language | Python 3.12 |
-| Web Framework | Streamlit |
+| Frontend | React.js, Vite, Tailwind CSS, Recharts, Framer Motion |
+| API Layer | FastAPI, uvicorn |
 | ML Libraries | scikit-learn, XGBoost, TensorFlow |
 | Explainability | SHAP |
 | NLP | NLTK |
-| Visualization | Altair, Matplotlib |
+| Visualization | Recharts (frontend), Matplotlib (backend) |
 | PDF Reports | ReportLab |
 | Notifications | Twilio |
 | Database | SQLite |
-| Authentication | bcrypt |
+| Authentication | bcrypt, JWT (python-jose) |
 | Testing | pytest |
 | Deployment | Docker |
 
@@ -114,8 +121,31 @@ HeartGuard is a multimodal heart disease risk prediction platform that combines:
 
 ```
 HeartGuard/
-├── app.py                      # Main Streamlit entry point
-├── requirements.txt            # 17 Python dependencies
+├── app.py                      # Main Streamlit entry point (deprecated)
+├── api/                        # FastAPI REST API layer
+│   ├── main.py                 # FastAPI application
+│   ├── auth.py                 # Authentication endpoints
+│   ├── assessments.py          # Assessment CRUD endpoints
+│   ├── dashboard.py            # Dashboard data endpoints
+│   ├── reviews.py              # Review workflow endpoints
+│   ├── admin.py                # Admin analytics/monitoring endpoints
+│   ├── recommendations.py      # Recommendations endpoints
+│   ├── reports.py              # Report generation endpoints
+│   ├── security.py             # Security audit endpoints
+│   ├── health.py               # Health check endpoints
+│   ├── deps.py                 # Auth dependencies, rate limiting
+│   └── requirements.txt        # API-specific dependencies
+├── frontend/                   # React frontend application
+│   ├── src/
+│   │   ├── components/         # Reusable UI components
+│   │   ├── pages/              # Page components (patient, reviewer, admin)
+│   │   ├── context/            # React context (auth)
+│   │   ├── services/           # API service layer
+│   │   ├── components/layout/  # Layout components (sidebar, topbar)
+│   │   └── components/routes/  # Route guards
+│   ├── package.json
+│   └── vite.config.js
+├── requirements.txt            # Python dependencies
 ├── Dockerfile                  # Multi-stage Docker build
 ├── .env.example                # Environment variable template
 ├── config/
@@ -134,20 +164,17 @@ HeartGuard/
 │   ├── review/                 # Doctor review workflow
 │   ├── recommendations/        # Recommendation engine
 │   ├── security/               # Security & audit logging
-│   ├── analytics/              # Analytics & monitoring (Phase 17)
+│   ├── analytics/              # Analytics & monitoring
 │   ├── evaluation/             # Model evaluation
-│   ├── ui/                     # Design system & components
 │   ├── health/                 # Health checks
-│   ├── startup/                # Startup validation
 │   └── utils/                  # Shared utilities
-├── pages/                      # 15 Streamlit pages
-├── tests/                      # 562 automated tests
+├── pages/                      # Streamlit pages (deprecated)
+├── tests/                      # Automated tests
 ├── models/                     # Trained model artifacts
 ├── data/                       # Databases & datasets
 ├── reports/                    # Evaluation reports
 ├── docs/                       # Documentation
-├── scripts/                    # Admin scripts
-└── notebooks/                  # Jupyter notebooks
+└── scripts/                    # Admin scripts
 ```
 
 ---
@@ -156,9 +183,11 @@ HeartGuard/
 
 ### Prerequisites
 - Python 3.12+
+- Node.js 18+
 - pip
+- npm
 
-### Steps
+### Backend Setup
 
 ```bash
 # 1. Clone the repository
@@ -181,9 +210,24 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your settings (at minimum, set SECRET_KEY)
 
-# 6. Run the application
-streamlit run app.py
+# 6. Run the API server
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+### Frontend Setup
+
+```bash
+# 1. Navigate to frontend directory
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start development server
+npm run dev
+```
+
+The frontend runs on http://localhost:5173 and proxies API requests to http://localhost:8000.
 
 ### Docker Deployment
 
@@ -192,7 +236,7 @@ streamlit run app.py
 docker build -t heartguard .
 
 # Run the container
-docker run -p 8501:8501 \
+docker run -p 8000:8000 \
   -e SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))") \
   -e ADMIN_EMAIL=admin@heartguard.local \
   -e ADMIN_PASSWORD=YourSecurePassword \
@@ -216,6 +260,33 @@ Environment variables (see `.env.example`):
 | `TWILIO_AUTH_TOKEN` | No | Twilio auth token |
 | `ALERTS_ENABLED` | No | Enable SMS alerts (default: false) |
 | `DEBUG` | No | Debug mode (default: false) |
+| `HEARTGUARD_CORS_ORIGINS` | No | Allowed CORS origins (default: http://localhost:5173) |
+
+---
+
+## API Documentation
+
+The FastAPI backend provides auto-generated interactive API documentation:
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Key Endpoints
+
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | /api/auth/register | Register patient account | No |
+| POST | /api/auth/login | Login (returns JWT) | No |
+| GET | /api/auth/me | Current user info | Yes |
+| POST | /api/assessments | Create new assessment | Yes |
+| GET | /api/assessments | List assessments | Yes |
+| GET | /api/assessments/latest | Latest assessment | Yes |
+| GET | /api/dashboard | Dashboard data | Yes |
+| GET | /api/reviews/queue | Review queue | REVIEWER |
+| POST | /api/reviews/{id} | Create review | REVIEWER |
+| GET | /api/admin/analytics | System analytics | ADMIN |
+| GET | /api/admin/health | System health | ADMIN |
+| GET | /api/health | Public health check | No |
 
 ---
 
@@ -241,26 +312,31 @@ pytest tests/test_drift_detection.py -v         # Drift Detection
 ## Usage
 
 ### Patient Workflow
-1. Register an account or login
-2. View your dashboard with risk summary
-3. Create a new risk assessment (enter clinical data + lifestyle description)
-4. View your risk result with SHAP explanation
-5. Review personalized recommendations
-6. View assessment history and trends
-7. Generate PDF reports
+1. Navigate to the landing page and click "Get Started"
+2. Register an account or login
+3. View your dashboard with risk summary and trends
+4. Create a new risk assessment (enter clinical data + lifestyle description)
+5. View your risk result with SHAP explanation
+6. Review personalized recommendations
+7. View assessment history and trends
+8. Generate and download PDF reports
 
 ### Reviewer Workflow
 1. Login with reviewer credentials
-2. View the review queue
-3. Inspect AI predictions and explanations
-4. Submit professional clinical observations
+2. View the reviewer dashboard with queue statistics
+3. Browse the review queue of pending assessments
+4. Inspect AI predictions and explanations
+5. Submit professional clinical observations
 
 ### Admin Workflow
 1. Login with admin credentials
-2. View system dashboard and analytics
-3. Monitor model performance and data quality
-4. Review audit logs and security events
-5. Manage user accounts
+2. View the admin dashboard with system overview
+3. Monitor analytics with interactive charts
+4. Track model performance and data drift
+5. Review data quality metrics
+6. Check system health status
+7. Review audit logs and security events
+8. Manage user accounts
 
 ---
 
