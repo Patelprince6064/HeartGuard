@@ -232,3 +232,61 @@ class ModelRegistry:
             name: art.version
             for name, art in self._artifacts.items()
         }
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible module-level functions
+# These map the old API to the new singleton registry.
+# ---------------------------------------------------------------------------
+
+def load_model(name: str) -> Optional[Any]:
+    """Load a model artifact by name (backward-compatible wrapper)."""
+    registry = ModelRegistry.get()
+    return registry.get_model(name)
+
+
+def get_available_models() -> dict[str, bool]:
+    """Return dict of model names and their availability status."""
+    registry = ModelRegistry.get()
+    all_names = list(registry._artifacts.keys()) + list(registry._load_errors.keys())
+    return {name: registry.is_available(name) for name in all_names}
+
+
+def get_best_model_name() -> str:
+    """Return the name of the best-performing model from best_model.json."""
+    best_model_path = MODEL_DIRECTORY.parent / "reports" / "best_model.json"
+    try:
+        if best_model_path.exists():
+            with open(best_model_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data.get("best_model", "logistic_regression")
+    except Exception:
+        pass
+    return "logistic_regression"
+
+
+def register_model(name: str, file_path: Path, artifact: Any, version: str = "v1") -> None:
+    """Register a model in the registry (for training pipelines)."""
+    registry = ModelRegistry.get()
+    registry._artifacts[name] = ModelArtifact(
+        name=name,
+        artifact=artifact,
+        version=version,
+        file_path=file_path,
+        integrity_verified=False,
+    )
+
+
+def get_model_path(name: str) -> Optional[Path]:
+    """Return the file path for a named model artifact."""
+    registry = ModelRegistry.get()
+    artifact = registry._artifacts.get(name)
+    return artifact.file_path if artifact else None
+
+
+def save_model(name: str, artifact: Any, file_path: Path, version: str = "v1") -> None:
+    """Save a model artifact to disk and register it (for training pipelines)."""
+    import joblib
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(artifact, str(file_path))
+    register_model(name, file_path, artifact, version)

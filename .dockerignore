@@ -1,0 +1,75 @@
+# HeartGuard .dockerignore
+# Exclude files from Docker build context
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Version control
+.git
+.gitignore
+.github
+
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+dist
+build
+.eggs
+
+# Virtual environments
+.venv
+venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation
+docs/
+notebooks/
+*.md
+!requirements.txt
+
+# Tests (not needed in production image)
+tests/
+.pytest_cache/
+conftest.py
+pytest.ini
+
+# Runtime data (created at runtime)
+data/auth/
+data/security/
+data/assessments/
+data/alerts/
+data/evaluations/
+data/tmp/
+data/processed/
+logs/
+reports/generated/
+
+# Keep raw data
+!data/raw/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Large/generated files
+reports/figures/
+reports/data_quality/
+reports/explainability/
+reports/training/
+artifacts/

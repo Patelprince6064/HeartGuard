@@ -51,7 +51,7 @@ class AuthorizationService:
         if clean_role in ("ADMIN", "REVIEWER"):
             return True
 
-        assessment = HistoryService.get_assessment(assessment_id, db_path=db_path)
+        assessment = HistoryService.get_assessment_by_id(assessment_id, db_path=db_path)
         if assessment is None:
             SecurityLogger.log_access_denied(
                 actor_id=user_id,

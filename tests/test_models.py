@@ -468,18 +468,17 @@ class TestModelRegistry:
             load_pred = loaded.predict(X)
             np.testing.assert_array_equal(orig_pred, load_pred)
 
-    def test_get_available_models_empty(self, tmp_path):
-        # When no models exist, should return empty list
+    def test_get_available_models_returns_dict(self, tmp_path):
+        # get_available_models returns a dict mapping name → availability
         models = get_available_models()
-        # We can't guarantee models dir is empty, but the function should work
-        assert isinstance(models, list)
+        assert isinstance(models, dict)
 
     def test_register_model(self, tmp_path):
-        meta = {"model_type": "test", "score": 0.95}
-        path = register_model("test_model", meta, output_dir=tmp_path)
-        assert path.exists()
+        from src.ml.model_registry import ModelRegistry
+        ModelRegistry.reset()
+        import numpy as np
 
-        with open(path, "r") as f:
-            data = json.load(f)
-        assert "test_model" in data
-        assert data["test_model"]["score"] == 0.95
+        dummy_artifact = np.array([1, 2, 3])
+        path = tmp_path / "test_model.pkl"
+        register_model("test_model", path, dummy_artifact, version="test-v1")
+        assert ModelRegistry.get().is_available("test_model")

@@ -21,7 +21,7 @@ def test_project_name():
 
 def test_project_version():
     """Test project version constant."""
-    assert PROJECT_VERSION == "0.1.0"
+    assert PROJECT_VERSION == "1.0.0"
 
 
 def test_clinical_weight():

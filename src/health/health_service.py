@@ -154,6 +154,39 @@ def get_health_status() -> dict[str, Any]:
     }
 
 
+def get_system_info() -> dict[str, Any]:
+    """Return authorized admin system information.
+
+    Safe for admin display — no secrets or credentials exposed.
+    Includes: version, environment, model versions, evaluation version.
+    """
+    from config.settings import (
+        ENVIRONMENT,
+        HEARTGUARD_VERSION,
+        RECOMMENDATION_ENGINE_VERSION,
+        EVALUATION_ENGINE_VERSION,
+    )
+    from src.ml.model_registry import ModelRegistry
+
+    try:
+        registry = ModelRegistry.get()
+        model_versions = registry.get_versions()
+        models_health = registry.get_health_status()
+    except Exception:
+        model_versions = {}
+        models_health = {"overall": "error", "loaded_count": 0}
+
+    return {
+        "application_version": HEARTGUARD_VERSION,
+        "environment": ENVIRONMENT,
+        "model_versions": model_versions,
+        "model_health": models_health["overall"],
+        "models_loaded": models_health.get("loaded_count", 0),
+        "recommendation_engine_version": RECOMMENDATION_ENGINE_VERSION,
+        "evaluation_engine_version": EVALUATION_ENGINE_VERSION,
+    }
+
+
 def get_liveness_status() -> dict[str, str]:
     """Lightweight liveness check — just confirms the process is alive.
 

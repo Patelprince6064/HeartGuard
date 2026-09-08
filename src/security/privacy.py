@@ -190,12 +190,15 @@ def scan_repo_secrets(repo_root: Optional[Path] = None) -> list[dict[str, Any]]:
     # Files and folders to skip
     skip_dirs = {".git", ".pytest_cache", "__pycache__", "venv", ".venv", "tests"}
     skip_exts = {".pyc", ".db", ".png", ".jpg", ".pkl", ".joblib", ".pt", ".onnx"}
+    skip_files = {"logger.py"}  # Contains privacy filter keywords, not actual secrets
 
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in skip_dirs]
         for fname in filenames:
             ext = os.path.splitext(fname)[1].lower()
             if ext in skip_exts:
+                continue
+            if fname in skip_files:
                 continue
             fpath = Path(dirpath) / fname
             # Skip test files and settings (settings reads env vars)

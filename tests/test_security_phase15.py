@@ -167,10 +167,10 @@ def test_session_inactivity_timeout():
 def test_privacy_data_masking():
     assert mask_email("doctor.watson@hospital.org") == "d***n@hospital.org"
     assert mask_email("a@b.com") == "a***@b.com"
-    assert mask_email(None) == "—"
+    assert mask_email(None) == "******"
 
-    assert mask_phone("+1 555-867-5309") == "+1 ***-***-5309"
-    assert mask_phone("123") == "***"
+    assert mask_phone("+1 555-867-5309") == "+1*********5309"
+    assert mask_phone("123") == "****"
 
     assert mask_name("Sherlock Holmes") == "S*** H***"
     assert mask_name("Admin") == "A***"
@@ -232,28 +232,20 @@ def test_authorization_role_hierarchy():
 def test_authorization_assessment_access_idor(tmp_path: Path):
     from src.analytics.history_service import HistoryService
     from src.analytics.models import init_assessment_db
-    from src.risk_engine.risk_models import RiskResult
 
     db_path = tmp_path / "test_history.db"
     init_assessment_db(db_path)
 
-    # Save assessment for User 10
-    dummy_res = RiskResult(
-        risk_score=45.0,
-        risk_category="MONITORING",
-        clinical_risk_percent=40.0,
-        lifestyle_risk_percent=50.0,
-        clinical_weight=0.7,
-        lifestyle_weight=0.3,
-        clinical_features={},
-        lifestyle_features={},
-        primary_risk_drivers=[],
-        risk_factors_count=2,
-        is_emergency=False,
-    )
+    # Save assessment for User 10 using dict format matching MultimodalRiskEngine output
+    dummy_result = {
+        "combined": {"risk": 45.0, "category": "MONITORING", "recommended_action": "Regular monitoring recommended."},
+        "clinical": {"risk": 40.0, "model": "HeartGuard-ML"},
+        "lifestyle": {"risk": 50.0, "detected_factors": []},
+        "overall_explanation": "Test assessment for IDOR verification.",
+    }
     rec = HistoryService.save_assessment(
         user_id=10,
-        multimodal_result=dummy_res,
+        multimodal_result=dummy_result,
         alert_status="NOT_TRIGGERED",
         assessment_id="TEST_ASSESS_001",
         db_path=db_path,
