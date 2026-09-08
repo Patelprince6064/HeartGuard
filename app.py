@@ -39,6 +39,7 @@ with st.sidebar:
     st.caption(f"Role: `{current_user['role']}`")
     st.divider()
     st.page_link("pages/dashboard.py", label="📊 Dashboard")
+    st.page_link("pages/patient_analytics.py", label="📈 My Analytics")
     st.page_link("pages/risk_assessment.py", label="🩺 New Assessment")
     st.page_link("pages/lifestyle_analyzer.py", label="🏃 Lifestyle Analyzer")
     st.page_link("pages/history.py", label="📜 History & Reports")
@@ -47,6 +48,8 @@ with st.sidebar:
         st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
     if is_admin():
         st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
+        st.page_link("pages/analytics_dashboard.py", label="📈 Analytics Dashboard")
+        st.page_link("pages/model_monitoring.py", label="🔬 Model Monitoring")
     st.page_link("pages/security.py", label="🔐 Security & Profile")
     st.divider()
     if st.button("🚪 Log Out", use_container_width=True):
