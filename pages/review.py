@@ -19,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 from src.auth.authorization import require_reviewer
-from src.auth.session_manager import clear_session, get_current_user
+from src.auth.session_manager import get_current_user
 from src.review import (
     PROFESSIONAL_NOTES_MAX_LENGTH,
     REVIEW_STATUSES,
@@ -39,6 +39,8 @@ from src.ui import (
     prepare_shap_chart,
     render_chart,
     render_risk_components_cards,
+    render_sidebar,
+    inject_global_theme,
 )
 
 logger = get_logger(__name__)
@@ -55,19 +57,8 @@ current_user = get_current_user()
 reviewer_id: int = current_user["id"]
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    st.page_link("pages/dashboard.py", label="📊 Patient Dashboard")
-    st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
-    st.page_link("pages/history.py", label="📜 Assessments & Reports")
-    st.page_link("pages/security.py", label="🔐 Security & Profile")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="review_logout"):
-        log_event("logout", "SUCCESS", user_id=reviewer_id, role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+inject_global_theme()
+render_sidebar()
 
 # ── Page header ───────────────────────────────────────────────────────────────
 st.title("🩺 Doctor Review Portal")

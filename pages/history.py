@@ -14,11 +14,11 @@ from src.analytics.analytics_service import AnalyticsService
 from src.analytics.history_service import HistoryService
 from src.analytics.trend_service import TrendService
 from src.auth.authorization import require_authentication
-from src.auth.session_manager import clear_session, get_current_user
+from src.auth.session_manager import get_current_user
 from src.reports.report_generator import ReportGenerator
 from src.reports.report_utils import export_assessments_to_csv, sanitize_report_filename
-from src.security.audit_logger import log_event
 from src.utils.logger import get_logger
+from src.ui import render_sidebar, inject_global_theme
 
 logger = get_logger(__name__)
 
@@ -30,14 +30,8 @@ current_user = get_current_user()
 user_id = current_user["id"]
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="history_logout"):
-        log_event("logout", "SUCCESS", user_id=user_id, role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+render_sidebar()
+inject_global_theme()
 
 # ── Header ──────────────────────────────────────────────────────────────────
 st.title("📜 Assessment History & Analytics")

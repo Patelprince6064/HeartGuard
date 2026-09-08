@@ -38,8 +38,7 @@ from src.analytics.analytics_service import AnalyticsService
 from src.analytics.history_service import HistoryService
 from src.analytics.trend_service import TrendService
 from src.auth.authorization import is_admin, is_reviewer, require_authentication
-from src.auth.session_manager import clear_session, get_current_user
-from src.security.audit_logger import log_event
+from src.auth.session_manager import get_current_user
 from src.ui import (
     format_risk_percentage,
     get_alert_status_badge,
@@ -61,8 +60,10 @@ from src.ui import (
     render_recent_assessments_table,
     render_recommendation_card,
     render_risk_components_cards,
+    render_sidebar,
     render_trend_disclaimer,
     safe_render_section,
+    inject_global_theme,
 )
 
 # ── Page Configuration ────────────────────────────────────────────────────────
@@ -81,25 +82,8 @@ user_name: str = current_user.get("name", "")
 user_role: str = current_user.get("role", "PATIENT")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(f"**{user_name or 'User'}**")
-    st.caption(f"Role: `{user_role}`")
-    st.divider()
-    st.page_link("pages/dashboard.py", label="📊 Dashboard")
-    st.page_link("pages/risk_assessment.py", label="🩺 New Assessment")
-    st.page_link("pages/lifestyle_analyzer.py", label="🏃 Lifestyle Analyzer")
-    st.page_link("pages/history.py", label="📜 History & Reports")
-    st.page_link("pages/explainable_ai.py", label="🧬 Explainable AI")
-    if is_reviewer():
-        st.page_link("pages/review.py", label="🩺 Doctor Review")
-    if is_admin():
-        st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
-    st.page_link("pages/security.py", label="🔐 Security & Profile")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="dashboard_logout"):
-        log_event("logout", "SUCCESS", user_id=user_id, role=user_role)
-        clear_session()
-        st.switch_page("pages/login.py")
+render_sidebar()
+inject_global_theme()
 
 # ── Header & Academic Disclaimer ──────────────────────────────────────────────
 render_dashboard_header(user_name=user_name, user_role=user_role)

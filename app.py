@@ -15,6 +15,7 @@ from src.auth.session_manager import (
     is_authenticated,
 )
 from src.security.audit_logger import log_event
+from src.ui import render_sidebar, inject_global_theme
 
 st.set_page_config(
     page_title=f"{PROJECT_NAME} - Heart Disease Risk Prediction",
@@ -31,36 +32,8 @@ if not is_authenticated():
 
 current_user = get_current_user()
 
-# ---------------------------------------------------------------------------
-# Sidebar — user info & navigation & logout
-# ---------------------------------------------------------------------------
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    st.page_link("pages/dashboard.py", label="📊 Dashboard")
-    st.page_link("pages/patient_analytics.py", label="📈 My Analytics")
-    st.page_link("pages/risk_assessment.py", label="🩺 New Assessment")
-    st.page_link("pages/lifestyle_analyzer.py", label="🏃 Lifestyle Analyzer")
-    st.page_link("pages/history.py", label="📜 History & Reports")
-    st.page_link("pages/explainable_ai.py", label="🧬 Explainable AI")
-    if is_reviewer():
-        st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
-    if is_admin():
-        st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
-        st.page_link("pages/analytics_dashboard.py", label="📈 Analytics Dashboard")
-        st.page_link("pages/model_monitoring.py", label="🔬 Model Monitoring")
-    st.page_link("pages/security.py", label="🔐 Security & Profile")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True):
-        log_event(
-            event_type="logout",
-            status="SUCCESS",
-            user_id=current_user["id"],
-            role=current_user["role"],
-        )
-        clear_session()
-        st.switch_page("pages/login.py")
+render_sidebar()
+inject_global_theme()
 
 # ---------------------------------------------------------------------------
 # Main content
@@ -146,4 +119,4 @@ if is_reviewer():
         st.page_link("pages/review.py", label="Open Doctor Review Portal →")
 
 st.divider()
-st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 12 — Advanced Dashboard & Visualizations Active")
+st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 18 — Advanced Dashboard & Visualizations Active")

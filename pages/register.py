@@ -18,6 +18,9 @@ st.set_page_config(
     layout="centered",
 )
 
+from src.ui.theme import inject_global_theme
+inject_global_theme()
+
 # Redirect if already logged in
 if is_authenticated():
     st.switch_page("pages/dashboard.py")

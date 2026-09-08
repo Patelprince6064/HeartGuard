@@ -24,6 +24,7 @@ from src.auth.authorization import require_role
 from src.auth.session_manager import get_current_user
 from src.auth.user_repository import count_users_by_role, list_users
 from src.security.audit_logger import get_recent_events, log_event
+from src.ui import render_sidebar, inject_global_theme
 
 st.set_page_config(page_title="HeartGuard Admin", layout="wide")
 
@@ -39,22 +40,8 @@ log_event(
 )
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    st.page_link("pages/dashboard.py", label="📊 Patient Dashboard")
-    st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
-    st.page_link("pages/review.py", label="🩺 Doctor Review Portal")
-    st.page_link("pages/history.py", label="📜 Assessments & History")
-    st.page_link("pages/model_performance.py", label="📈 Model Performance")
-    st.page_link("pages/security.py", label="🔐 Security & Audit Log")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="admin_logout"):
-        from src.auth.session_manager import clear_session
-        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+inject_global_theme()
+render_sidebar()
 
 # ── Header ──────────────────────────────────────────────────────────────────
 st.title("🛡️ Admin Dashboard")

@@ -1,6 +1,7 @@
-"""HeartGuard UI Design System & Component Library (Phase 12).
+"""HeartGuard UI Design System & Component Library (Phase 18).
 
-Exports reusable badges, cards, charts, tables, and dashboard components.
+Exports reusable badges, cards, charts, tables, dashboard components,
+theme, sidebar, and form components.
 """
 
 from src.ui.badges import (
@@ -37,17 +38,23 @@ from src.ui.dashboard_components import (
     render_quick_actions,
     safe_render_section,
 )
+from src.ui.forms import render_clinical_inputs
+from src.ui.sidebar import render_sidebar
 from src.ui.tables import (
     render_recent_assessments_table,
     render_reviewer_queue_table,
 )
+from src.ui.theme import COLORS, get_colors, inject_global_theme
 
 __all__ = [
+    "COLORS",
     "format_risk_percentage",
     "get_alert_status_badge",
+    "get_colors",
     "get_priority_badge",
     "get_review_status_badge",
     "get_risk_category_badge",
+    "inject_global_theme",
     "prepare_alert_distribution_chart",
     "prepare_category_distribution_chart",
     "prepare_review_distribution_chart",
@@ -58,6 +65,7 @@ __all__ = [
     "render_badge",
     "render_chart",
     "render_dashboard_header",
+    "render_clinical_inputs",
     "render_emergency_disclaimer",
     "render_empty_dashboard_state",
     "render_insight_card",
@@ -69,6 +77,7 @@ __all__ = [
     "render_reviewer_queue_table",
     "render_quick_actions",
     "render_risk_components_cards",
+    "render_sidebar",
     "render_trend_disclaimer",
     "safe_render_section",
 ]

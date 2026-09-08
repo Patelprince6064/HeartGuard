@@ -12,13 +12,13 @@ from config.settings import PROJECT_NAME
 from src.auth.authorization import require_role
 from src.auth.session_manager import get_current_user, clear_session
 from src.security.audit_logger import log_event
+from src.ui import render_sidebar, inject_global_theme, render_chart
 from src.analytics.model_monitoring import ModelMonitoringService
 from src.analytics.drift_detection import DriftDetector
 from src.analytics.data_quality_monitoring import DataQualityMonitor
 from src.analytics.performance_monitoring import PerformanceMonitor
 from src.analytics.monitoring_events import MonitoringEventService
 from src.analytics.anomaly_detection import AnomalyDetector
-from src.ui import render_chart
 
 st.set_page_config(page_title=f"{PROJECT_NAME} — Model Monitoring", layout="wide")
 
@@ -27,21 +27,8 @@ current_user = get_current_user()
 log_event("admin_access", "SUCCESS", user_id=current_user["id"], role=current_user["role"],
           detail="Model monitoring dashboard accessed")
 
-# Sidebar
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    st.page_link("pages/dashboard.py", label="📊 Patient Dashboard")
-    st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
-    st.page_link("pages/analytics_dashboard.py", label="📈 Analytics Dashboard")
-    st.page_link("pages/model_monitoring.py", label="🔬 Model Monitoring")
-    st.page_link("pages/security.py", label="🔐 Security & Audit Log")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="model_mon_logout"):
-        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+render_sidebar()
+inject_global_theme()
 
 st.title("🔬 Model Monitoring Dashboard")
 st.caption("Monitor model performance, drift, data quality, and system health.")

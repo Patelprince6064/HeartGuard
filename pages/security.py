@@ -38,6 +38,7 @@ from src.auth.authorization import require_authentication
 from src.auth.session_manager import get_current_role, get_current_user, get_current_user_id
 from src.security.audit_logger import get_audit_statistics, get_filtered_events
 from src.security.privacy import export_user_data, mask_email, scan_repo_secrets
+from src.ui import render_sidebar, inject_global_theme
 
 st.set_page_config(page_title="HeartGuard — Security & Audit Center", layout="wide")
 
@@ -46,6 +47,9 @@ require_authentication()
 current_user = get_current_user()
 current_role = (get_current_role() or "PATIENT").upper().strip()
 user_id = get_current_user_id() or 1
+
+render_sidebar()
+inject_global_theme()
 
 # ── Header ──────────────────────────────────────────────────────────────────
 st.title("🛡️ Security, Privacy & Audit Center")

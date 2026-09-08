@@ -7,6 +7,7 @@ Patients can view their own SHAP results on the Risk Assessment page.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -14,8 +15,10 @@ import streamlit as st
 
 from config.settings import MODEL_DIRECTORY, PROCESSED_DATA_DIRECTORY, REPORT_DIRECTORY
 from src.auth.authorization import require_role
-from src.auth.session_manager import clear_session, get_current_user
-from src.security.audit_logger import log_event
+from src.auth.session_manager import get_current_user
+from src.ui import render_sidebar, inject_global_theme
+
+logger = logging.getLogger(__name__)
 
 st.set_page_config(page_title="Explainable AI", layout="wide")
 
@@ -23,15 +26,8 @@ st.set_page_config(page_title="Explainable AI", layout="wide")
 require_role("ADMIN")
 current_user = get_current_user()
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="xai_logout"):
-        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+render_sidebar()
+inject_global_theme()
 
 st.title("Explainable AI")
 
@@ -242,9 +238,8 @@ if st.button("Explain Prediction", type="primary", use_container_width=True):
                 st.image(str(local_plot), use_container_width=True)
 
         except Exception as exc:
-            st.error(f"Explanation failed: {exc}")
-            import traceback
-            st.code(traceback.format_exc(), language="python")
+            logger.exception("SHAP explanation failed: %s", exc)
+            st.error("Unable to generate explanation. Please try again or contact support.")
 
 # ---------------------------------------------------------------------------
 # Section 4: Global Feature Importance
@@ -280,9 +275,8 @@ if st.button("Compute Global Feature Importance", use_container_width=True):
                 st.image(str(summary_plot_path), use_container_width=True)
 
         except Exception as exc:
-            st.error(f"Global importance computation failed: {exc}")
-            import traceback
-            st.code(traceback.format_exc(), language="python")
+            logger.exception("Global importance computation failed: %s", exc)
+            st.error("Unable to compute global feature importance. Please try again or contact support.")
 
 # ---------------------------------------------------------------------------
 # Footer

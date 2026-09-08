@@ -1,10 +1,12 @@
-"""Tests for HeartGuard UI components, badges, cards, and chart preparation (Phase 12).
+"""Tests for HeartGuard UI components, badges, cards, and chart preparation (Phase 12 & 18).
 
 Covers:
   - Accessible badges for risk categories, review statuses, and alert outcomes
   - Percentage formatting
   - Altair chart preparation helpers and boundary conditions
   - Empty states and degradation fallbacks
+  - Global CSS theme tokens
+  - Clinical input form data structure
 """
 
 from __future__ import annotations
@@ -14,11 +16,13 @@ import pytest
 
 from src.ui.badges import (
     get_alert_status_badge,
+    get_priority_badge,
     get_review_status_badge,
     get_risk_category_badge,
 )
 from src.ui.cards import format_risk_percentage
 from src.ui.charts import (
+    PALETTE,
     prepare_alert_distribution_chart,
     prepare_category_distribution_chart,
     prepare_review_distribution_chart,
@@ -26,6 +30,7 @@ from src.ui.charts import (
     prepare_risk_trend_chart,
     prepare_shap_chart,
 )
+from src.ui.theme import COLORS, GLOBAL_CSS
 
 
 # ── Badge Formatters ─────────────────────────────────────────────────────────
@@ -57,6 +62,14 @@ def test_alert_status_badges():
     assert "ALERT SENT" in get_alert_status_badge("SENT")
     assert "ALERT FAILED" in get_alert_status_badge("FAILED")
     assert "NOT TRIGGERED" in get_alert_status_badge(None)
+
+
+def test_priority_badges():
+    assert "HIGH PRIORITY" in get_priority_badge("HIGH")
+    assert "MEDIUM PRIORITY" in get_priority_badge("MEDIUM")
+    assert "LOW PRIORITY" in get_priority_badge("LOW")
+    assert "INFORMATIONAL" in get_priority_badge("INFO")
+    assert "INFO" in get_priority_badge(None)
 
 
 # ── Card & String Formatters ─────────────────────────────────────────────────
@@ -120,3 +133,43 @@ def test_prepare_distribution_charts():
     alert_chart = prepare_alert_distribution_chart({"NOT_TRIGGERED": 6, "SENT": 1})
     assert alert_chart is not None
     assert prepare_alert_distribution_chart({}) is None
+
+
+# ── Phase 18: Global Theme ──────────────────────────────────────────────────
+
+def test_theme_colors_has_required_keys():
+    required = ["primary", "secondary", "success", "warning", "error", "info", "text", "muted", "border"]
+    for key in required:
+        assert key in COLORS, f"Missing required color token: {key}"
+        assert COLORS[key].startswith("#"), f"Color token '{key}' should be hex: {COLORS[key]}"
+
+
+def test_global_css_is_valid_string():
+    assert isinstance(GLOBAL_CSS, str)
+    assert len(GLOBAL_CSS) > 500
+    assert "<style>" in GLOBAL_CSS
+    assert "</style>" in GLOBAL_CSS
+
+
+def test_palette_consistency():
+    """Verify PALETTE has all expected keys from charts.py."""
+    expected = ["primary", "clinical", "lifestyle", "overall", "low", "elevated", "high", "critical"]
+    for key in expected:
+        assert key in PALETTE, f"Missing PALETTE key: {key}"
+
+
+# ── Phase 18: Clinical Form Options ─────────────────────────────────────────
+
+def test_clinical_form_option_maps():
+    from src.ui.forms import (
+        CHEST_PAIN_OPTIONS,
+        EXERCISE_ANGINA_OPTIONS,
+        FBS_OPTIONS,
+        RESTING_ECG_OPTIONS,
+        SEX_OPTIONS,
+    )
+    assert len(SEX_OPTIONS) == 2
+    assert len(CHEST_PAIN_OPTIONS) == 4
+    assert len(RESTING_ECG_OPTIONS) == 3
+    assert len(EXERCISE_ANGINA_OPTIONS) == 2
+    assert len(FBS_OPTIONS) == 2

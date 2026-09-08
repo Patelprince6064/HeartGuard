@@ -14,7 +14,7 @@ import streamlit as st
 
 from config.settings import MODEL_DIRECTORY, REPORT_DIRECTORY
 from src.auth.authorization import require_authentication
-from src.auth.session_manager import clear_session, get_current_user
+from src.auth.session_manager import get_current_user
 from src.risk_engine.multimodal_risk import MultimodalRiskEngine
 from src.risk_engine.risk_categories import (
     CATEGORY_APPOINTMENT,
@@ -29,6 +29,7 @@ from src.risk_engine.risk_explanation import DISCLAIMER_TEXT
 from src.security.audit_logger import log_event
 from src.security.input_validator import validate_lifestyle_text_length
 from src.security.rate_limiter import check_rate_limit
+from src.ui import render_sidebar, inject_global_theme
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,15 +40,8 @@ st.set_page_config(page_title="HeartGuard Risk Assessment", layout="wide")
 require_authentication()
 current_user = get_current_user()
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown(f"**{current_user['name']}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="risk_logout"):
-        log_event("logout", "SUCCESS", user_id=current_user["id"], role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+render_sidebar()
+inject_global_theme()
 
 st.title("HeartGuard Risk Assessment")
 st.markdown(

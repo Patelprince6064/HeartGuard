@@ -11,9 +11,7 @@ import streamlit as st
 
 from config.settings import PROJECT_NAME
 from src.auth.authorization import require_authentication
-from src.auth.session_manager import get_current_user, clear_session
-from src.security.audit_logger import log_event
-from src.auth.authorization import is_admin, is_reviewer
+from src.auth.session_manager import get_current_user
 from src.analytics.analytics_service import AnalyticsService
 from src.analytics.history_service import HistoryService
 from src.analytics.trend_service import TrendService
@@ -27,6 +25,8 @@ from src.ui import (
     render_metric_card,
     render_trend_disclaimer,
     safe_render_section,
+    render_sidebar,
+    inject_global_theme,
 )
 
 st.set_page_config(
@@ -40,24 +40,8 @@ current_user = get_current_user()
 user_id: int = current_user["id"]
 
 # Sidebar
-with st.sidebar:
-    st.markdown(f"**{current_user.get('name', 'User')}**")
-    st.caption(f"Role: `{current_user['role']}`")
-    st.divider()
-    st.page_link("pages/dashboard.py", label="📊 Dashboard")
-    st.page_link("pages/patient_analytics.py", label="📈 My Analytics")
-    st.page_link("pages/risk_assessment.py", label="🩺 New Assessment")
-    st.page_link("pages/history.py", label="📜 History & Reports")
-    if is_reviewer():
-        st.page_link("pages/review.py", label="🩺 Doctor Review")
-    if is_admin():
-        st.page_link("pages/admin.py", label="🛡️ Admin Dashboard")
-    st.page_link("pages/security.py", label="🔐 Security & Profile")
-    st.divider()
-    if st.button("🚪 Log Out", use_container_width=True, key="analytics_logout"):
-        log_event("logout", "SUCCESS", user_id=user_id, role=current_user["role"])
-        clear_session()
-        st.switch_page("pages/login.py")
+inject_global_theme()
+render_sidebar()
 
 # Header
 st.title("📈 My Analytics")
