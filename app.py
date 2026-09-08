@@ -119,4 +119,4 @@ if is_reviewer():
         st.page_link("pages/review.py", label="Open Doctor Review Portal →")
 
 st.divider()
-st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Phase 18 — Advanced Dashboard & Visualizations Active")
+st.markdown(f"**Version:** {PROJECT_VERSION} · **Status:** Final Release")

@@ -24,8 +24,8 @@ load_dotenv()
 # ---------------------------------------------------------------------------
 PROJECT_NAME = "HeartGuard"
 PROJECT_VERSION = "1.0.0"
-HEARTGUARD_VERSION = "1.0.0-phase16"
-PHASE_STATUS = "Phase 16 — Deployment & DevOps"
+HEARTGUARD_VERSION = "1.0.0"
+PHASE_STATUS = "Phase 20 — Final Release"
 
 # ---------------------------------------------------------------------------
 # Environment (Phase 16)
