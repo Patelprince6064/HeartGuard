@@ -29,17 +29,22 @@ export default function PatientAnalyticsPage() {
 
   if (loading) return <Loading text="Loading analytics..." />
 
-  const riskDistribution = analytics?.risk_distribution
-    ? Object.entries(analytics.risk_distribution).map(([name, value]) => ({ name, value }))
+  const riskDistObj = analytics?.risk_distribution || {}
+  const riskDistribution = Object.keys(riskDistObj).length > 0
+    ? Object.entries(riskDistObj).map(([name, value]) => ({ name, value }))
     : []
 
-  const trendData = analytics?.risk_trend || []
+  const trendData = analytics?.risk_trend || analytics?.trends || []
+  const totalAssessments = analytics?.total_assessments ?? analytics?.statistics?.total_assessments ?? 0
+  const avgRisk = analytics?.avg_risk ?? analytics?.statistics?.average_overall_risk ?? 0
+  const lowRisk = analytics?.low_risk_count ?? (riskDistObj.LOW || riskDistObj.Low || 0)
+  const criticalCount = analytics?.critical_alerts ?? analytics?.statistics?.critical_count ?? 0
 
   return (
     <div className="space-y-6">
       <PageHeader title="My Analytics" description="View your personal health analytics and trends" />
 
-      {!analytics ? (
+      {!analytics || totalAssessments === 0 ? (
         <EmptyState icon={BarChart3} title="No analytics data" message="Complete assessments to see your analytics." />
       ) : (
         <>
@@ -79,19 +84,19 @@ export default function PatientAnalyticsPage() {
           <Card header="Summary Stats">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-2xl font-bold text-slate-900">{analytics.total_assessments || 0}</p>
+                <p className="text-2xl font-bold text-slate-900">{totalAssessments}</p>
                 <p className="text-sm text-slate-500">Total Assessments</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-2xl font-bold text-slate-900">{analytics.avg_risk || 0}%</p>
+                <p className="text-2xl font-bold text-slate-900">{avgRisk}%</p>
                 <p className="text-sm text-slate-500">Average Risk</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{analytics.low_risk_count || 0}</p>
+                <p className="text-2xl font-bold text-green-600">{lowRisk}</p>
                 <p className="text-sm text-slate-500">Low Risk</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg">
-                <p className="text-2xl font-bold text-red-600">{analytics.critical_alerts || 0}</p>
+                <p className="text-2xl font-bold text-red-600">{criticalCount}</p>
                 <p className="text-sm text-slate-500">Critical Alerts</p>
               </div>
             </div>

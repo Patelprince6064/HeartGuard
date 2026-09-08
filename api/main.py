@@ -20,6 +20,7 @@ from api.recommendations import router as recommendations_router
 from api.reports import router as reports_router
 from api.security import router as security_router
 from api.health import router as health_router
+from api.lifestyle import router as lifestyle_router
 from api.deps import rate_limit_middleware
 
 
@@ -59,6 +60,7 @@ app.include_router(recommendations_router)
 app.include_router(reports_router)
 app.include_router(security_router)
 app.include_router(health_router)
+app.include_router(lifestyle_router)
 
 
 @app.get("/", tags=["root"])

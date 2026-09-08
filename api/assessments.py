@@ -166,6 +166,59 @@ async def create_assessment(
         norm_clinical = _normalize_clinical_data(raw_clinical)
         lifestyle_text = (body.lifestyle_text or raw_clinical.get("lifestyle_text") or "No lifestyle narrative provided.").strip()
 
+        from src.data.features import HEARTGUARD_FEATURES
+        from datetime import datetime, timezone
+        import uuid
+
+        has_clinical = any(norm_clinical.get(f) is not None for f in HEARTGUARD_FEATURES)
+        if not has_clinical and lifestyle_text:
+            from src.nlp.lifestyle_analyzer import LifestyleAnalyzer
+            from src.recommendations.recommendation_rules import (
+                rule_alcohol_use,
+                rule_family_history,
+                rule_physical_inactivity,
+                rule_poor_sleep,
+                rule_smoking,
+                rule_unhealthy_diet,
+            )
+            analyzer = LifestyleAnalyzer()
+            l_res = analyzer.analyze(lifestyle_text)
+            l_score = float(l_res.get("lifestyle_score", 0.0))
+            l_cat = str(l_res.get("risk_category", "LOW"))
+            factors = l_res.get("detected_risk_factors", [])
+            recs: list[str] = []
+            for rule_fn in [
+                rule_smoking,
+                rule_physical_inactivity,
+                rule_unhealthy_diet,
+                rule_poor_sleep,
+                rule_alcohol_use,
+                rule_family_history,
+            ]:
+                match = rule_fn(factors, {})
+                if match:
+                    recs.append(f"{match['title']}: {match['description']}")
+            if not recs:
+                recs.append("Maintain healthy daily habits and schedule regular checkups.")
+
+            return AssessmentResponse(
+                id=None,
+                assessment_id=uuid.uuid4().hex[:8],
+                user_id=current_user.user_id,
+                created_at=datetime.now(timezone.utc).isoformat(),
+                clinical_risk=0.0,
+                lifestyle_risk=l_score,
+                overall_risk=l_score,
+                risk_score=l_score,
+                risk_percentage=l_score,
+                risk_category=l_cat,
+                recommendation=recs[0],
+                recommendations=recs,
+                model_version="lifestyle-nlp (v1.0.0)",
+                narrative_summary=str(l_res.get("summary", "")),
+                alert_status="NOT_TRIGGERED",
+            )
+
         engine = MultimodalRiskEngine()
         result = engine.assess(
             clinical_data=norm_clinical,

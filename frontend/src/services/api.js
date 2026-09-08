@@ -69,6 +69,7 @@ export const api = {
   },
 
   reports: {
+    getAll: () => apiClient.get('/reports'),
     generate: (assessmentId) => apiClient.post(`/reports/generate/${assessmentId}`),
     download: (reportId) => apiClient.get(`/reports/${reportId}/download`, { responseType: 'blob' }),
   },
@@ -79,6 +80,10 @@ export const api = {
 
   health: {
     check: () => apiClient.get('/health'),
+  },
+
+  lifestyle: {
+    analyze: (data) => apiClient.post('/lifestyle/analyze', typeof data === 'string' ? { text: data } : data),
   },
 }
 
