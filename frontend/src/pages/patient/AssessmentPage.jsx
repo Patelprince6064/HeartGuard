@@ -84,19 +84,26 @@ export default function AssessmentPage() {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      const payload = {
+      const isMale = form.sex === 'male' || form.sex === '1' || form.sex === 1
+      const clinicalData = {
         age: Number(form.age),
-        sex: form.sex,
+        sex: isMale ? 1 : 0,
         chest_pain_type: Number(form.chest_pain_type),
-        resting_blood_pressure: Number(form.resting_blood_pressure),
+        resting_bp: Number(form.resting_blood_pressure),
         cholesterol: Number(form.cholesterol),
-        fasting_blood_sugar: form.fasting_blood_sugar === 'true' || form.fasting_blood_sugar === true,
+        fasting_blood_sugar: form.fasting_blood_sugar === 'true' || form.fasting_blood_sugar === true || form.fasting_blood_sugar === 1 ? 1 : 0,
         resting_ecg: Number(form.resting_ecg),
         max_heart_rate: Number(form.max_heart_rate),
-        exercise_induced_angina: form.exercise_induced_angina === 'true' || form.exercise_induced_angina === true,
+        exercise_angina: form.exercise_induced_angina === 'true' || form.exercise_induced_angina === true || form.exercise_induced_angina === 1 ? 1 : 0,
         st_depression: Number(form.st_depression),
         num_major_vessels: Number(form.num_major_vessels),
-        lifestyle_text: form.lifestyle_text || undefined,
+      }
+      const payload = {
+        clinical_data: clinicalData,
+        lifestyle_text: (form.lifestyle_text || '').trim() || 'No specific lifestyle risk factors reported.',
+        ...clinicalData,
+        resting_blood_pressure: clinicalData.resting_bp,
+        exercise_induced_angina: clinicalData.exercise_angina,
       }
       const res = await api.assessments.create(payload)
       navigate('/assessment/result', { state: { assessment: res.data } })
