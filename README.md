@@ -9,7 +9,7 @@
 
 ## Problem Statement
 
-Heart disease is the leading cause of death globally, responsible for approximately 17.9 million deaths annually (WHO). Early detection of cardiovascular risk can significantly improve patient outcomes through timely intervention. However, existing risk assessment tools often lack transparency, making it difficult for clinicians and patients to understand why a particular risk level was assigned.
+Heart disease is the leading cause of death globally, responsible for approximately 17.9 million deaths annually (WHO). Early detection of cardiovascular risk can significantly improve patient outcomes through timely intervention. However, existing risk assessment tools often lack transparency, making it difficult for clinicians and patients to understand why a particular risk level was assigned
 
 ## Solution
 
