@@ -364,7 +364,7 @@ pytest tests/test_drift_detection.py -v         # Drift Detection
 1. **Dataset**: Limited to Cleveland Heart Disease dataset (303 samples). Not validated on diverse populations.
 2. **Models**: ROC-AUC scores are modest (0.43-0.61). This is an academic/research prototype, not a clinical-grade system.
 3. **Lifestyle NLP**: Rule-based approach with predefined lexicon. Not a production NLP system.
-4. **Clinical Validation**: No clinical validation has been performed. Predictions are experimental estimates.
+4. **Clinical Validation**: No clinical validation has been performed Predictions are experimental estimates.
 5. **Population Bias**: Training data may not represent all demographics equally.
 
 ---
